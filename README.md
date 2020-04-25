@@ -1,5 +1,5 @@
 # WRF-PALM coupler  
-## for users who don't need to create new static files
+**(for users who don't need to create new static files)**
 
 
 This repository contains the following files:
