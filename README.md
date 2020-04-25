@@ -1,2 +1,4 @@
-# WRF-PALM-no-static
-WRF-PALM coupler for users who do not require new static input
+# WRF-PALM coupler - for users who don't need to create new static files
+
+
+
