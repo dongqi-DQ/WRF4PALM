@@ -56,7 +56,8 @@ wrf_file = 'wrfout_d03_2017-06-15_chch' # this is one example WRF output I used.
 dt_start    = datetime(2017, 6, 16, 0,)   #  start time in YYYY/MM/DD/HH format
 dt_end      = datetime(2017, 6, 17, 0,)   #  end time in YYYY/MM/DD/HH format
 interval    = 2                           #  define time interval of WRF output to be read for the coupling
-ts          = '2hour'                     #  specify the update frequency of boundary conditions to show in the dynamic input file name
+ts          = '2hour'                     #  specify the update frequency of boundary conditions which will 
+                                          #  show in the dynamic input filename
                                           #  this works as a reference in case the update frequency calculation went wrong
 ```
 
