@@ -63,7 +63,7 @@ ts          = '2hour'                     #  specify the update frequency of bou
 
 **Remark:**   
 - here users can define the start/end time and update frequency depending on their own requirments. For this example case, I have hourly WRF output, but I only want the boundary conditions update every 2 hours. The `interval` is hence set to 2. If you have 10-minute WRF output and want hourly update in PALM, then `interval = 6` (simple math :).  
-- When the update frequency is not a divisor of the total run time, the script will round up the last step of time to avoid automatic termination of PALM. For example, if one has a 24-hour PALM simulation (`end_time = 86400`) with 5-hour update of boundary conditions, the time stamp in the dynamic file should be 0, 18000, 36000, 54000, 72000, 86400 (instead of 90000 because 86400 may reach the final time stamp in WRF output). If the 86400 step is not in the dynamic file, PALM will terminate at 72000 step.
+- When the update frequency is not a divisor of the total run time, the script will round up the last step of time to avoid automatic termination of PALM. For example, if one has a 24-hour PALM simulation (`end_time = 86400`) with 5-hour update of boundary conditions, the time stamp in the dynamic file should be 0s, 18000s, 36000s, 54000s, 72000s, 86400s (instead of 90000s because 86400s may reach the final time step in WRF output). If the 86400s step is not in the dynamic file, PALM will terminate at 72000s step.
 
 
 4. Specify the depth of 8 soil layers [Line 60 in `create_dynamic.py`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/create_dynamic.py#L60)
