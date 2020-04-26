@@ -47,7 +47,7 @@ case_name = 'chch_50m_example' # case name as you specified in create_cfg.py
 
 2. Specify the WRF output file for the coupling [Line 44 in `create_dynamic.py`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/create_dynamic.py#L44)
 ```python
-wrf_file = 'wrfout_d03_2017-06-15_chch' # this is one example WRF output I used. The output file can be provided upon enquiry.
+wrf_file = 'wrfout_d03_2017-06-15_chch' # this is one example WRF output I used. The output file can be provided upon request.
 ```
 
 3. Specify the start and end time stamp as well as the update frequency of boundary conditions [Line 53 in `create_dynamic.py`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/create_dynamic.py#L53)
