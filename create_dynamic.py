@@ -1,63 +1,89 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-'''
- Initially created on Mon Jul  2 12:08:53 2018 by @author: ricardofaria
+#--------------------------------------------------------------------------------#
+# Script to couple dynamics from WRF to PALM v6.0
+# Output of this script is the NetCDF dynamic driver for PALM following
+# PALM Input Data Standard (PIDS) v1.9
+#
+# Users must run the create_cfg.py script first for the coupler to locate the PALM
+# domian in WRF. 
+#
+# Users must provide their own WRF output file.
+#
+# Users must define the start/end date and time step for the dynamic downscaling.
+#
+# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+# Acknowledgement: The author would like to acknowledge Ricardo Faria for his initial
+# contribution to the coupler development.
+#--------------------------------------------------------------------------------#
 
- Script to create Large-scale forcing data (boundary conditions) netcdf input 
- for PALM following PALM Input Data Standard (PIDS) v1.9.
- – contains all dynamic data need to force PALM.
- Contains dynamic information for the run, such as time­dependent boundary 
- conditions and the initial state of the atmosphere.
-
-#############################################################################
- Updated by Dongqi Lin
-    Add the initial state of atmosphere parameters in netCDF dynamic driver
-    Change interpolation method of boundary conditions
-    Change geostropihc wind calculation
-    Add start/end time index so that users can choose the time step to interpolate
-    Time indexing can only apply to one WRF file
-    No vertical streching is applied.
-'''
-
-
-###############################################################################
+import gc
 import numpy as np
 from netCDF4 import Dataset, num2date
-import wrf
 from wrf import getvar, destagger, interplevel
 import time
-
 import pandas as pd
 import xarray as xr
 from tqdm import tqdm
-from util import res_grid_change as rgc
-from util import geostrophic
-from util import nearest
+from dynamic_util.geostrophic import *
+from dynamic_util.nearest import nearest
 from datetime import datetime
-from util import surface_nan_solver as sns
-
-
+from dynamic_util.surface_nan_solver import *
+from dynamic_util.interp_array import *
 start = datetime.now()
 
-case_name = 'chch_50m_example'
+###############################################################################
+##-------------------------------- User INPUT -------------------------------##
+###############################################################################
 
-wrf_file = 'wrfout_d03_2017-06-15_chch'
+case_name = 'chch_10m_NW'
+
+wrf_file = 'raw_forcing/wrfout_d04_2017-02-12_00.nc'
 
 interp_mode = 'linear'
 
 # !!! give start and end time to interpolate WRF output here !!!
 # this depends on
 # 1) WRF output time frequency
-# 2) the desired PALM input update frequncy
-
-dt_start = datetime(2017, 6, 16, 0,)
-dt_end = datetime(2017, 6, 17, 0,)
-interval = 2
-ts = '2hour'
+# 2) the desired PALM input updatge frequency
+dt_start = datetime(2017, 2, 13,2,)
+dt_end = datetime(2017, 2, 14, 2,)
+interval = 1
+ts = '1hour'
 
 # layers for soil temperature and moisture calculation
 # this shall be changed depending on different cases
 dz_soil = np.array([0.01, 0.02, 0.04, 0.06, 0.14, 0.26, 0.54, 1.86])
+z_origin = 0 #meters
+###############################################################################
+##--------------------------- stretch vertically ----------------------------##
+###############################################################################
+# stretch factor for a vertically stretched grid
+dz_stretch_factor = 1.02
+
+# Height level above which the grid is to be stretched vertically (in m)
+dz_stretch_level = 1200
+
+# aloowed maximum vertical grid spacing (in m)
+dz_max = 30
+
+def calc_stretch(z, dz):
+    dz_lvl = np.zeros_like(z)
+    dz_lvl[:] = dz
+    z_stretch = np.copy(z)
+    zw_stretch = np.copy(zw)
+    for idz, height in enumerate(z):
+        if height>dz_stretch_level:
+            dz_lvl[idz] = dz_lvl[idz-1]*dz_stretch_factor
+            if dz_lvl[idz]<=dz_max:
+                z_stretch[idz] = z_stretch[idz-1]+dz_lvl[idz]
+            else:
+                z_stretch[idz] = z_stretch[idz-1]+dz_max
+    for i in range(0, zw.shape[0]):
+        zw_stretch[i] = (z_stretch[i]+z_stretch[i+1])*0.5
+    return(z_stretch, zw_stretch)
+
+###############################################################################
+##--------------------------------- Read CFG --------------------------------##
+###############################################################################
 
 cfg = pd.read_csv('cfg_input/'+case_name + '.cfg')
 dx = cfg.dx.values[0]
@@ -70,18 +96,23 @@ north = cfg.north.values[0]
 south = cfg.south.values[0]
 east = cfg.east.values[0]
 west = cfg.west.values[0]
-lat_palm = cfg.midlat[0]
-lon_palm = cfg.midlon[0]
+lat_palm = cfg.centlat[0]
+lon_palm = cfg.centlon[0]
 
-y = np.arange(dy/2,dy*ny+1,dy)
-x = np.arange(dx/2,dx*nx+1,dx)
-z = np.arange(dz/2, dz*nz, dz)
+y = np.arange(dy/2,dy*ny+dy/2,dy)
+x = np.arange(dx/2,dx*nx+dx/2,dx)
+z = np.arange(dz/2, dz*nz, dz) + z_origin
 xu = x + np.gradient(x)/2
 xu = xu[:-1]
 yv = y + np.gradient(y)/2
 yv = yv[:-1]
 zw = z + np.gradient(z)/2
 zw = zw[:-1]
+
+if dz_stretch_factor>1:
+    z, zw = calc_stretch(z, dz)
+
+
 
 ###############################################################################
 ##---------------------------- read WRF variables ---------------------------##
@@ -95,14 +126,14 @@ nc_wrf = Dataset(wrf_file, 'r')
 
 lat_s = ds_wrf['XLAT'][0,:,0].data
 lon_s = ds_wrf['XLONG'][0,0,:].data
-south_idx, north_idx = nearest.nearest(lat_s, south)[1], nearest.nearest(lat_s, north)[1]
-west_idx, east_idx = nearest.nearest(lon_s, west)[1], nearest.nearest(lon_s, east)[1]
+south_idx, north_idx = nearest(lat_s, south)[1], nearest(lat_s, north)[1]
+west_idx, east_idx = nearest(lon_s, west)[1], nearest(lon_s, east)[1]
 
 lat_v = ds_wrf['XLAT_V'][0,:,0].data
-southv_idx, northv_idx = nearest.nearest(lat_v, south)[1], nearest.nearest(lat_v, north)[1]
+southv_idx, northv_idx = nearest(lat_v, south)[1], nearest(lat_v, north)[1]
 
 lon_u = ds_wrf['XLONG_U'][0,0,:].data
-westu_idx, eastu_idx = nearest.nearest(lon_u, west)[1], nearest.nearest(lon_u, east)[1]
+westu_idx, eastu_idx = nearest(lon_u, west)[1], nearest(lon_u, east)[1]
 
 lat_wrf = ds_wrf['XLAT'][0,south_idx:north_idx,0].data
 lon_wrf = ds_wrf['XLONG'][0,0,west_idx:east_idx].data
@@ -171,10 +202,10 @@ for t, wrf_t in enumerate(time_idx):
     pres[t,:,:,:] = getvar(nc_wrf, 'pres', timeidx = wrf_t, units='Pa')[:,south_idx:north_idx, west_idx:east_idx]
     tk[t,:,:,:] = getvar(nc_wrf, 'tk', timeidx = wrf_t)[:,south_idx:north_idx, west_idx:east_idx]
     # soil tempearture
-    tslb[t,:,:,:] = nc_wrf.variables['TSLB'][wrf_t, :, south_idx:north_idx, west_idx:east_idx].data
+    tslb[t,:,:,:] = ds_wrf['TSLB'][wrf_t, :, south_idx:north_idx, west_idx:east_idx].data
     # soil moisture
-    smois[t,:,:,:] = nc_wrf.variables['SMOIS'][wrf_t, :, south_idx:north_idx, west_idx:east_idx].data
-    qv[t,:,:,:] = nc_wrf.variables['QVAPOR'][wrf_t, :, south_idx:north_idx, west_idx:east_idx].data
+    smois[t,:,:,:] = ds_wrf['SMOIS'][wrf_t, :, south_idx:north_idx, west_idx:east_idx].data
+    qv[t,:,:,:] = ds_wrf['QVAPOR'][wrf_t, :, south_idx:north_idx, west_idx:east_idx].data
     # velocity field
     u[t,:,:,:] = ds_wrf['U'][wrf_t, :, south_idx:north_idx, westu_idx:eastu_idx].data
     v[t,:,:,:] = ds_wrf['V'][wrf_t, :, southv_idx:northv_idx, west_idx:east_idx].data
@@ -184,6 +215,7 @@ for t, wrf_t in enumerate(time_idx):
     z_wrf_u[t,:,:,:] = H[wrf_t,:, south_idx:north_idx, westu_idx:eastu_idx]
     z_wrf_v[t,:,:,:] = H[wrf_t,:, southv_idx:northv_idx, west_idx:east_idx]
     times = np.append(times, num2date(wrf_time[wrf_t],wrf_time.units))
+ 
 
 nc_wrf.close()
 
@@ -202,11 +234,11 @@ def search_nan(var,t,var_type):
         for y_idx in range(0,var.shape[2]):
             for x_idx in range(0,var.shape[3]):
                 if var_type == 'uv':
-                    var[t,:,y_idx,x_idx] = sns.surface_nan_uv(var[t,:,y_idx,x_idx],z)
+                    var[t,:,y_idx,x_idx] = surface_nan_uv(var[t,:,y_idx,x_idx],z)
                 elif var_type == 's':
-                    var[t,:,y_idx,x_idx] = sns.surface_nan_s(var[t,:,y_idx,x_idx])
+                    var[t,:,y_idx,x_idx] = surface_nan_s(var[t,:,y_idx,x_idx])
                 elif var_type == 'w':
-                    var[t,:,y_idx,x_idx] = sns.surface_nan_w(var[t,:,y_idx,x_idx])
+                    var[t,:,y_idx,x_idx] = surface_nan_w(var[t,:,y_idx,x_idx])
                 else:
                     print("wrong type given")
     return(var[t,:,:,:])
@@ -233,18 +265,19 @@ zstag_wrf_int = np.empty((times.shape[0],w.shape[1],y.shape[0],x.shape[0]))
 
 for t in tqdm(range(u.shape[0]),ascii=True):
     for z_idx in range(0,u.shape[1]):
-        u_int[t,z_idx,:,:] = rgc.grid_points_change(u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
-        v_int[t,z_idx,:,:] = rgc.grid_points_change(v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
-        qv_int[t,z_idx,:,:] = rgc.grid_points_change(qv[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        pt_int[t,z_idx,:,:] = rgc.grid_points_change(pt[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        pres_int[t,z_idx,:,:] = rgc.grid_points_change(pres[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        tk_int[t,z_idx,:,:] = rgc.grid_points_change(tk[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        z_wrf_int[t,z_idx,:,:] =  rgc.grid_points_change(z_wrf[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        z_wrf_int_u[t,z_idx,:,:] = rgc.grid_points_change(z_wrf_u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
-        z_wrf_int_v[t,z_idx,:,:] = rgc.grid_points_change(z_wrf_v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
+        u_int[t,z_idx,:,:] = interp_array_2d(u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
+        v_int[t,z_idx,:,:] = interp_array_2d(v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
+        qv_int[t,z_idx,:,:] = interp_array_2d(qv[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        pt_int[t,z_idx,:,:] = interp_array_2d(pt[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        pres_int[t,z_idx,:,:] = interp_array_2d(pres[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        tk_int[t,z_idx,:,:] = interp_array_2d(tk[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        z_wrf_int[t,z_idx,:,:] =  interp_array_2d(z_wrf[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        z_wrf_int_u[t,z_idx,:,:] = interp_array_2d(z_wrf_u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
+        z_wrf_int_v[t,z_idx,:,:] = interp_array_2d(z_wrf_v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
     for z_idx in range(0,w.shape[1]):
-        w_int[t,z_idx,:,:] = rgc.grid_points_change(w[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        zstag_wrf_int[t,z_idx,:,:] =  rgc.grid_points_change(zstag_wrf[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        w_int[t,z_idx,:,:] = interp_array_2d(w[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+        zstag_wrf_int[t,z_idx,:,:] =  interp_array_2d(zstag_wrf[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
+ 
 print("Done.", flush=True)
 
 ###############################################################################
@@ -268,11 +301,12 @@ for l_idx, l in tqdm(enumerate(z), desc="Interpolating unstaggered vertical leve
         v_tmp[t, int(l_idx), :, :] = interplevel(v_int[t, :, :, :], z_wrf_int_v[t,:,:,:], l).data
         pres_tmp[t, int(l_idx), :, :] = interplevel(pres_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
         tk_tmp[t, int(l_idx), :, :] = interplevel(tk_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
-
+ 
+        
 for lstag_idx, lstag in tqdm(enumerate(zw), desc="Interpolating staggered vertical levels"):    
     for t in range(0,times.shape[0]):
         w_tmp[t, int(lstag_idx),:, :] = interplevel(w_int[t,:,:,:], zstag_wrf_int[t,:,:,:], lstag).data
-
+ 
 print(flush=True)
 print('Vertical interpolation done.',flush=True)
 
@@ -283,28 +317,31 @@ def rolling_mean(var, window):
     roll_mean = []
     for i in range(0, var.shape[0] - window, window):
         roll_mean.append(np.nansum(var[i:i + window]) / window)
-
     return (np.array(roll_mean))
 
-lat_wrf_f = rgc.grid_points_change_1darray(lat_wrf,y.shape[0])
-lon_wrf_f = rgc.grid_points_change_1darray(lon_wrf,x.shape[0])
+if dz > 10:
+    lat_wrf_f = interp_array_1d(lat_wrf,y.shape[0])
+    lon_wrf_f = interp_array_1d(lon_wrf,x.shape[0])
+    
+    geo_wind_u = np.zeros((pres_tmp.shape[0], pres_tmp.shape[1]))
+    geo_wind_v = np.zeros((pres_tmp.shape[0], pres_tmp.shape[1]))
+    geo_wind_u_f = np.zeros((u.shape[0], z.shape[0]))
+    geo_wind_v_f = np.zeros((u.shape[0], z.shape[0]))
+    for t in tqdm(range(pres_tmp.shape[0]),ascii=True, desc="Calculating geostropihc winds"):
+        for h in range(0, pres_tmp.shape[1]):
+            geo_wind = geostr(pres_tmp[t, h, :, :], tk_tmp[t, h, :, :], lat_wrf_f[:], lon_wrf_f[:], dy, dx)
+            geo_wind_u[t, h] = geo_wind[0]
+            geo_wind_v[t, h] = geo_wind[1]
+         # "smooth" the geostrophic winds after calculation by taking rolling mean
+        geo_wind_u_f[t, :] = interp_array_1d(rolling_mean(geo_wind_u[t, :], 10), z.shape[0])
+        geo_wind_v_f[t, :] = interp_array_1d(rolling_mean(geo_wind_v[t, :], 10), z.shape[0])
+    
+    print(flush=True)
+    print("Geostrophic wind calculation done.",flush=True)
 
-geo_wind_u = np.zeros((pres_tmp.shape[0], pres_tmp.shape[1]))
-geo_wind_v = np.zeros((pres_tmp.shape[0], pres_tmp.shape[1]))
-geo_wind_u_f = np.zeros((u.shape[0], z.shape[0]))
-geo_wind_v_f = np.zeros((u.shape[0], z.shape[0]))
-for t in tqdm(range(pres_tmp.shape[0]),ascii=True, desc="Calculating geostropihc winds"):
-    for h in range(0, pres_tmp.shape[1]):
-        geo_wind = geostrophic.geostr(pres_tmp[t, h, :, :], tk_tmp[t, h, :, :], lat_wrf_f[:], lon_wrf_f[:], dy, dx)
-        geo_wind_u[t, h] = geo_wind[0]
-        geo_wind_v[t, h] = geo_wind[1]
-        
-    # "smooth" the geostrophic winds after calculation by taking rolling mean
-    geo_wind_u_f[t, :] = rgc.grid_points_change_1darray(rolling_mean(geo_wind_u[t, :], 10), z.shape[0])
-    geo_wind_v_f[t, :] = rgc.grid_points_change_1darray(rolling_mean(geo_wind_v[t, :], 10), z.shape[0])
 
-print(flush=True)
-print("Geostrophic wind calculation done.",flush=True)
+
+
 
 
 
@@ -317,7 +354,19 @@ for t in tqdm(range(0,u_tmp.shape[0]),ascii=True,desc = "Resolving surface NaNs"
     tk_tmp[t,:,:,:] = search_nan(tk_tmp,t,'s')
     w_tmp[t,:,:,:] = search_nan(w_tmp,t,'w')
 
+ 
 print(flush='True')
+
+if dz<=10:
+    # https://palm.muk.uni-hannover.de/trac/ticket/906
+    geo_wind_u_f = np.zeros((u.shape[0], z.shape[0]))
+    geo_wind_v_f = np.zeros((u.shape[0], z.shape[0]))
+    for t in range(0,u_tmp.shape[0]):
+        geo_wind_u_f[t,:] = np.nanmean(np.nanmean(u_tmp[t,:,:,:],axis=1),axis=1)
+        geo_wind_v_f[t,:] = np.nanmean(np.nanmean(v_tmp[t,:,:,:],axis=1),axis=1)
+   
+
+
 
 # Genearte initial profiles
 u_init = np.zeros(z.shape[0])
@@ -370,8 +419,8 @@ init_soil_tyx = np.empty((dz_soil.shape[0],y.shape[0],x.shape[0]))
 init_soil_myx = np.empty((dz_soil.shape[0],y.shape[0],x.shape[0]))
 
 for i in range(dz_soil.shape[0]):
-    init_soil_tyx[i,:,:] = rgc.grid_points_change(init_soil_t[i,:,:], x.shape[0], y.shape[0], interp_mode)
-    init_soil_myx[i,:,:] = rgc.grid_points_change(init_soil_m[i,:,:], x.shape[0], y.shape[0], interp_mode)
+    init_soil_tyx[i,:,:] = interp_array_2d(init_soil_t[i,:,:], x.shape[0], y.shape[0], interp_mode)
+    init_soil_myx[i,:,:] = interp_array_2d(init_soil_m[i,:,:], x.shape[0], y.shape[0], interp_mode)
 
 
 
@@ -382,7 +431,8 @@ for i in range(dz_soil.shape[0]):
 print('Writing NetCDF file',flush=True)
 nc_output = xr.Dataset()
 res_origin = str(dx) + 'x' + str(dy) + ' m'
-nc_output.attrs['description'] = 'Contains dynamic data from WRF mesoscale'
+nc_output.attrs['description'] = f'Contains dynamic data from WRF mesoscale. WRF output file: {wrf_file}'
+nc_output.attrs['author'] = 'Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)'
 nc_output.attrs['history'] = 'Created at ' + time.ctime(time.time())
 nc_output.attrs['source']= 'netCDF4 python'
 nc_output.attrs['origin_lat'] = np.float(lat_palm)
@@ -397,11 +447,11 @@ nc_output.attrs['end_time'] =  str(times[-1]) + ' UTC'
 
 nc_output['x'] = xr.DataArray(x, dims=['x'], attrs={'units':'m'})
 nc_output['y'] = xr.DataArray(y, dims=['y'], attrs={'units':'m'})
-nc_output['z'] = xr.DataArray(z, dims=['z'], attrs={'units':'m'})
+nc_output['z'] = xr.DataArray(z-z_origin, dims=['z'], attrs={'units':'m'})
 nc_output['zsoil'] = xr.DataArray(dz_soil, dims=['zsoil'], attrs={'units':'m'})
 nc_output['xu'] = xr.DataArray(xu, dims=['xu'], attrs={'units':'m'})
 nc_output['yv'] = xr.DataArray(yv, dims=['yv'], attrs={'units':'m'})
-nc_output['zw'] = xr.DataArray(zw, dims=['zw'], attrs={'units':'m'})
+nc_output['zw'] = xr.DataArray(zw-z_origin, dims=['zw'], attrs={'units':'m'})
 nc_output['time'] = xr.DataArray(times_sec, dims=['time'], attrs={'units':'seconds'})
 
 
@@ -503,8 +553,9 @@ print('Add to your *_p3d file the: ' + '\n soil_temperature = ' + repr(init_soil
       '\n soil_moisture = ' + repr(init_soil_m.mean(axis=1).mean(axis=1)) + '\n deep_soil_temperature = ' + repr(init_soil_tmn))
 
 end = datetime.now()
-print('PALM dynamic input file is ready. Duration: {}'.format(end - start))
+print('PALM dynamic input file is ready. Script duration: {}'.format(end - start))
 print('Start time: '+str(times[0]))
 print('End time: '+str(times[-1]))
 print('Time step: '+str(time_step_sec)+' seconds')
-del u_int, v_int, w_int, qv_int, pt_int, pres_int, tk_int
+del u_int, v_int, w_int, qv_int, pt_int, pres_int#, tk_int
+gc.collect()
