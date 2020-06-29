@@ -13,7 +13,6 @@ This repository contains the following files:
 
 ## Note:
 - The scripts may only work on Python 3. Some features or functions may need some tweaks by the Python 2 users themselves. 
-- Vertical streching is currently not supported, but is on the to do list.    
 - Now users can downscale WRF to PALM when the PALM domain is smaller than one grid spacing of WRF, but this may not be very accurate.  
 - Small shifts may apply when locating small domains using latitudes and logitudes.  
 - When coupling to high resolution and large PALM domain, the coupling script may cost a lot of RAM. We hence recommend to apply WRF-PALM offline nesting to a large and coarse-resolution PALM domain first and then apply PALM self-nesting for all the small high-resolution domains.  
