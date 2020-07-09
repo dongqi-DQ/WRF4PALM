@@ -23,11 +23,11 @@ import time
 import pandas as pd
 import xarray as xr
 from tqdm import tqdm
-from dynamic_util.geostrophic import *
-from dynamic_util.nearest import nearest
+from util.geostrophic import *
+from util.nearest import nearest
 from datetime import datetime
-from dynamic_util.surface_nan_solver import *
-from dynamic_util.interp_array import *
+from util.surface_nan_solver import *
+from util.interp_array import *
 start = datetime.now()
 
 ###############################################################################
