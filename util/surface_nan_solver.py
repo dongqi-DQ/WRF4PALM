@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 21 14:36:46 2019
-
-functions to resolve NaN values near surface
-
-@author: dli84
-"""
+#--------------------------------------------------------------------------------#
+# First Created on Thu Nov 21 14:36:46 2019
+#
+# functions to resolve NaN values near surface
+#
+# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+#--------------------------------------------------------------------------------#
 import numpy as np
+
 
 
 def surface_nan_s(data):
