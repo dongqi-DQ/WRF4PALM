@@ -17,7 +17,7 @@ import pandas as pd
 from pyproj import Proj
 import utm
 
-from dynamic_util.loc_dom import *
+from util.loc_dom import *
 
 ###############################################################################
 ##----------------------------- Define domains ------------------------------##
