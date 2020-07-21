@@ -1,4 +1,4 @@
-# WRF-PALM coupler  
+# WRF4PALM 
 **(for users who don't need to create new static files)**
 
 
