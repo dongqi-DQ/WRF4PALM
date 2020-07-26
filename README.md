@@ -44,7 +44,7 @@ Run the script `create_cfg.py` and then you will get a cfg file (in `cfg_input` 
 case_name = 'chch_50m_example' # case name as you specified in create_cfg.py
 ```
 
-2. Specify the WRF output file for the coupling [Line 44 in `create_dynamic.py`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/create_dynamic.py#L44)
+2. Specify the WRF output file to process [Line 44 in `create_dynamic.py`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/create_dynamic.py#L44)
 ```python
 wrf_file = 'wrfout_d03_2017-06-15_chch' # this is one example WRF output I used. The output file can be provided upon request.
 ```
