@@ -37,7 +37,7 @@ nz_d01        = 96                 # number of grid points along z-axis
 
 Run the script `create_cfg.py` and then you will get a cfg file (in `cfg_input` folder) containing the domain information for the coupler script `create_dynamic.py`.
 
-## Step 2 Couple WRF to PALM
+## Step 2 Process WRF for PALM
 
 1. Specify case name which should be the same as the one specified in Step 1. [Line 42 in `create_dynamic.py`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/create_dynamic.py#L42)  
 ```python
