@@ -25,8 +25,8 @@ The users first need to give the domain information in the `create_cfg.py` scrip
 
 ```python
 case_name_d01 = 'chch_50m_example' # case name as you prefer, but should be consistent with the one used in dynamic script
-midlat_d01    = -43.508760         # latitude of domain centre
-midlon_d01    = 172.664099         # longitude of domain centre
+centlat_d01   = -43.508760         # latitude of domain centre
+centlon_d01   = 172.664099         # longitude of domain centre
 dx_d01        = 50                 # resolution in meters along x-axis
 dy_d01        = 50                 # resolution in meters along y-axis
 dz_d01        = 50                 # resolution in meters along z-axis
