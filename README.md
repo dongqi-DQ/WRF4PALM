@@ -9,7 +9,7 @@ This repository contains the following files:
 - scripts in `util` - functions to use in the coupling  
 - An example cfg file in `cfg_input`  
 - An example dynamic input in `dynamic files` 
-- [`WRF-PALM-framewrok.pdf`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/WRF-PALM-framework.pdf) explaining the framework
+- [`WRF-PALM-framework.pdf`](https://github.com/dqbuhtig/WRF-PALM-no-static/blob/master/WRF-PALM-framework.pdf) explaining the framework
 
 ## Note:
 - The scripts may only work on Python 3. Some features or functions may need some tweaks by the Python 2 users themselves. 
