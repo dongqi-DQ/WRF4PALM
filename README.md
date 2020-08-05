@@ -38,7 +38,7 @@ Run the script `create_cfg.py` and then you will get a cfg file (in `cfg_input` 
 
 1. Specify case name, which should be the same as the one specified in Step 1. 
 ```python
-case_name = 'chch_50m_example' # case name as you specified in create_cfg.py
+case_name = 'chch_NW_10m' # case name as you specified in create_cfg.py
 ```
 
 2. Specify the WRF output file (in `wrf_output` folder) to process 
