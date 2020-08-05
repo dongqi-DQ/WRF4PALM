@@ -1,5 +1,5 @@
 # WRF4PALM 
-**(for users who don't need to create new static files)**
+**Tools to create a dyanmic driver to enable WRF-PALM offline nesting**
 
 
 This repository contains the following files:
