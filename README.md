@@ -118,3 +118,4 @@ Time step: 3600.0 seconds
 The information above shows that it took 15 minutes to finish processing. The start time, end time and time step are also given showing data in the dynamic driver is as desired. If all the information is correct, then the dynamic driver is ready to use for PALM.
 
 
+**Contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)**
