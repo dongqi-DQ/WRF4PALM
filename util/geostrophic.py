@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###------------------------------------------------------------------------###
-# Calculate Geostrophic wind profile from wrf file area.
+# WRF4PALM
+# Functions to calculate geostrophic wind profiles
 # Based on: http://www.meteo.mcgill.ca/~huardda/amelie/geowind.py
+# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 ###------------------------------------------------------------------------###
 
 

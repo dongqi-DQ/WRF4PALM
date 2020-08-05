@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------#
-
-# Functions to interpolate array
-#
-# @initial_author: ricardofaria
-# Modified by Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+# WRF4PALM
+# Functions to interpolate 2d and 1d array
+# (adopted from WRF2PALM)
+# @ WRF2PALM author: Ricardo Faria (https://github.com/ricardo88faria/WRF2PALM)
+# @ WRF4PALM contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 #--------------------------------------------------------------------------------#
 
 

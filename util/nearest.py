@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue May 22 12:29:13 2018
+#--------------------------------------------------------------------------------#
+# WRF4PALM
+#
+# function to find nearest index value and index in array
+# (adopted from WRF2PALM)
+# @ WRF2PALM author: Ricardo Faria (https://github.com/ricardo88faria/WRF2PALM)
+# @ WRF4PALM contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+#--------------------------------------------------------------------------------#
 
-@author: ricardofaria
-
-find nearest index value and index in array
-
-"""
 
 def nearest(array, number):
     

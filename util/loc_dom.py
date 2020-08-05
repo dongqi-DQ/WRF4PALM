@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------#
-# This script contains functions to run create_cfg.py
-#
-#
+# WRF4PALM
+# This script contains functions for create_cfg.py
+#   - function to calculate lat/lon
+#   - function to write cfg file
+#   - function to calculate centre lat/lon for nested domains
 # @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 #--------------------------------------------------------------------------------#
 

@@ -1,18 +1,19 @@
 #--------------------------------------------------------------------------------#
-# Script to couple dynamics from WRF to PALM v6.0
+# WRF4PALM to process data from WRF to PALM v6.0
 # Output of this script is the NetCDF dynamic driver for PALM following
 # PALM Input Data Standard (PIDS) v1.9
 #
-# Users must run the create_cfg.py script first for the coupler to locate the PALM
-# domian in WRF. 
+# Users must provide PALM domain configuration first and run the create_cfg.py script 
 #
 # Users must provide their own WRF output file.
 #
-# Users must define the start/end date and time step for the dynamic downscaling.
+# Users must define the start/end date and time step for the dynamic driver.
+#
+# Users now can define streched vertical grid spacing
 #
 # @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 # Acknowledgement: The author would like to acknowledge Ricardo Faria for his initial
-# contribution to the coupler development.
+# contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.
 #--------------------------------------------------------------------------------#
 
 import gc
@@ -34,9 +35,9 @@ start = datetime.now()
 ##-------------------------------- User INPUT -------------------------------##
 ###############################################################################
 
-case_name = 'chch_10m_NW'
+case_name = 'chch_NW_10m'
 
-wrf_file = 'raw_forcing/wrfout_d04_2017-02-12_00.nc'
+wrf_file = 'wrf_output/wrfout_d04_2017-02-10_00.nc'
 
 interp_mode = 'linear'
 
@@ -44,19 +45,22 @@ interp_mode = 'linear'
 # this depends on
 # 1) WRF output time frequency
 # 2) the desired PALM input updatge frequency
-dt_start = datetime(2017, 2, 13,2,)
-dt_end = datetime(2017, 2, 14, 2,)
+# Time in UTC
+dt_start = datetime(2017, 2, 11,20,)
+dt_end = datetime(2017, 2, 12, 2,)
 interval = 1
 ts = '1hour'
 
 # layers for soil temperature and moisture calculation
 # this shall be changed depending on different cases
 dz_soil = np.array([0.01, 0.02, 0.04, 0.06, 0.14, 0.26, 0.54, 1.86])
-z_origin = 0 #meters
+# define z_origin in meters
+z_origin = 0 
 ###############################################################################
 ##--------------------------- stretch vertically ----------------------------##
 ###############################################################################
 # stretch factor for a vertically stretched grid
+# set this to 1 if no streching required
 dz_stretch_factor = 1.02
 
 # Height level above which the grid is to be stretched vertically (in m)

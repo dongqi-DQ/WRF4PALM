@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------#
-# First Created on Thu Nov 21 14:36:46 2019
+# WRF4PALM
 #
 # functions to resolve NaN values near surface
 #
