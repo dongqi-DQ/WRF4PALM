@@ -15,6 +15,7 @@ This repository contains the following files:
 - The scripts may only work on Python 3. Some features or functions may need some tweaks if the scripts are used in Python2. 
 - When coupling to high resolution and large PALM domain, the coupling script may cost a lot of RAM.   
 - The `interplevel` function from the [wrf-python](https://wrf-python.readthedocs.io/en/latest/) package may have bugs (creating NaN) when interpolate to certain height levels. Several functions have been applied in the coupler to avoid the NaN values, which may slow down the surface NaN solver.
+- To minimise interpolation errors, the WRF projection should be centred close to the centre of the PALM domain.
 
 # Let's get start
 ## Step 1 Locate the Domain
