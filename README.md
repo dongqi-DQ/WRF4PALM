@@ -121,6 +121,8 @@ The information above shows that it took 15 minutes to finish processing. The st
 
 ***** End of README *****
 
-Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/WRF2PALM).
+Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/WRF2PALM). 
+
+A full documentation is still underconstruction, if you have any queries please contact the author.
 
 **Contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)**
