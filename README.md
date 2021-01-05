@@ -1,11 +1,19 @@
-# WRF4PALM [![DOI](https://zenodo.org/badge/258736274.svg)](https://zenodo.org/badge/latestdoi/258736274)  
+# WRF4PALM v1.0.1   
 
 **Tools to create a dyanmic driver to enable WRF-PALM offline nesting**
 
+[Update info v1.0.1]
+To make the process of WRF4PALM more straight forward for users, some updates have been made in v1.0.1:  
+1. Users now only need to edit `namelist.dynamic` instead of running two different Python scripts
+2. The two Python scripts `create_cfg.py` and `create_dynamic.py` are combined into one script to save manual work
+3. Modified the calculation of geostrophic winds. 
+
+
+***** Start of README *****
 
 This repository contains the following files:
 
-- `create_cfg.py` - Python script to create a cfg file including PALM domain configuration 
+- `namelist.dynamic` - Python namelist for user input 
 - `create_dynamic.py` - the major WRF4PALM script which interpolates WRF output to a PALM dynamic driver   
 - scripts in `util` - functions to use in WRF4PALM  
 - Example cfg files in `cfg_input`  
@@ -13,77 +21,102 @@ This repository contains the following files:
 
 ## Note:
 - The scripts may only work on Python 3. Some features or functions may need some tweaks if the scripts are used in Python2. 
-- When coupling to high resolution and large PALM domain, the coupling script may cost a lot of RAM.   
+- When processing to high resolution and large PALM domain, the script may cost a lot of RAM.   
 - The `interplevel` function from the [wrf-python](https://wrf-python.readthedocs.io/en/latest/) package may have bugs (creating NaN) when interpolate to certain height levels. Several functions have been applied in the coupler to avoid the NaN values, which may slow down the surface NaN solver.
 - To minimise interpolation errors, the WRF projection should be centred close to the centre of the PALM domain.
 
-# Let's get start
-## Step 1 Locate the Domain
+# Step 1: Edit namelist.dynamic
 
-The users first need to give the domain information in the `create_cfg.py` script. The information including:  
+## Tips if you are new to Python namelist:  
+1. Square brakets indicate the name/key of each section, such as `[case]`, `[domain]`, and `[stretch]`. Please do not change these keys.  
+2. Under each section, there are parameters for users to specify. Please include commas (,) at the end of each line. Otherwise, WRF4PALM may not work.  
+3. Use double quotes for strings.  
+4. Comments in the namelist still begin with a hash mark (#). 
 
-```python
-case_name_d01 = 'chch_NW_10m'     # case name as you prefer, but should be consistent with the one used in dynamic script
-centlat_d01   = -43.487           # latitude of domain centre
-centlon_d01   = 172.537           # longitude of domain centre
-dx_d01        = 10                # grid spacing in meters along x-axis
-dy_d01        = 10                # grid spacing in meters along y-axis
-dz_d01        = 10                # grid spacing in meters along z-axis
-nx_d01        = 360               # number of grid points along x-axis
-ny_d01        = 360               # number of grid points along y-axis
-nz_d01        = 360               # number of grid points along z-axis
-```
-
-Run the script `create_cfg.py` and then you will get a cfg file (in `cfg_input` folder) containing the raw domain configuration for `create_dynamic.py`.
-
-## Step 2 Process WRF for PALM
-
-1. Specify case name, which should be the same as the one specified in Step 1. 
-```python
-case_name = 'chch_NW_10m' # case name as you specified in create_cfg.py
-```
-
-2. Specify the WRF output file (in `wrf_output` folder) to process 
-```python
-wrf_file = 'wrf_output/your_wrf_output_file_name' 
-```
-
-3. Specify the start and end time stamp as well as the update frequency of boundary conditions you want to used in PALM simulation  
+## case
+Users first need to specify the case name for the dynamic driver in `[case]` section:
 
 ```python
-dt_start    = datetime(2017, 2, 11, 20,)  #  start time in YYYY/MM/DD/HH format
-dt_end      = datetime(2017, 2, 12, 2,)   #  end time in YYYY/MM/DD/HH format
-interval    = 1                           #  define time interval of WRF output to be read for the coupling
-ts          = '1hour'                     #  specify the update frequency of boundary conditions which will 
-                                          #  show in the dynamic input filename
-                                          #  this works as a reference in case the update frequency calculation went wrong
+[case]
+case_name = "your case name"     # case name as you prefer
 ```
+
+## domain
+Specify PALM domain configuration under `[domain]` section:
+
+```python
+[domain]
+centlat   = -43.529469,                           # latitude of domain centre
+centlon   = 172.599316,                           # longitude of domain centre
+nx        = 200,                                  # number of grid points along x-axis
+ny        = 200,                                  # number of grid points along y-axis
+nz        = 200,                                  # number of grid points along z-axis
+dx        = 80.0,                                 # number of grid points along x-axis
+dy        = 80.0,                                 # number of grid points along y-axis
+dz        = 16.0,                                 # number of grid points along z-axis
+z_origin  = 0.0,                                  # elevated mean grid position (elevated terrain)
+```
+
+Here `z_origin` can be specified to consider elevated mean grid position (elevated terrain) thus avoiding many NAN and unrealistic extrapolation towards z=0 m.  
+If `z_origin` is not known, leave it as 0 m. PALM will automatically exclude all data below the elevated level if terrain is included in the simulation. 
+
+## strech
+The `[strech]` section is to enable a vertically streched grid. The parameters are identical to PALM's parameters. 
+```python
+[stretch]
+dz_stretch_factor = 1.0,        # stretch factor for a vertically stretched grid
+                                # set this to 1.0 if no streching required
+dz_stretch_level = 1200.0,      # Height level above which the grid is to be stretched vertically (in m)
+
+dz_max = 30.0,                  # allowed maximum vertical grid spacing (in m)
+```
+
+## wrf
+The `[wrf]` section includes all the parameters related to WRF output. Users must specify:
+
+1. WRF output flie name and location
+```python
+wrf_output = "wrf_output/your_wrf_output.nc",
+```
+
+2. Interpolation method (`"linear"` or `"nearest"`)
+```python
+interp_mode = "linear",
+```
+
+3. Specify the start and end time stamp as well as the update frequency of boundary conditions to be used in PALM simulation
+```python
+start_year = 2019,
+start_month = 7,
+start_day = 1,
+start_hour = 0,
+
+end_year = 2019,
+end_month = 7,
+end_day = 1,
+end_hour = 10,
+
+interval = 6,
+ts = '1hour',
+```
+
 
 **Remark:**   
-- here users can define the start/end time and update frequency depending on their own requirments. For example, I have hourly WRF output, if I only want the boundary conditions update every 2 hours. The `interval` is set to 2 and `ts` is 2hour, which gives a dynamic driver with filename `case_name_2hour`. If you have 10-minute WRF output and want hourly update in PALM, then `interval = 6` and `ts = '2hour'` (simple math :).  
+- here users can define the start/end time and update frequency depending on their own requirments. For example, a user has hourly WRF output, if a user only wants the boundary conditions update every 2 hours. The `interval` is set to 2 and `ts` is 2hour, which gives a dynamic driver with filename `case_name_2hour`. Here I have 10-minute WRF output and want hourly update in PALM, then `interval = 6` and `ts = '1hour'` (simple math :).  
+
 - When the update frequency is not a divisor of the total run time, the script will round up the last step of time to avoid automatic termination of PALM. For example, if one has a 24-hour PALM simulation (`end_time = 86400`) with 5-hour update of boundary conditions, the time stamp in the dynamic file should be 0s, 18000s, 36000s, 54000s, 72000s, 86400s (instead of 90000s because 86400s may reach the final time step in WRF output). If the 86400s step is not in the dynamic file, PALM may return some errors and terminate at the 72000s step. 
 
-
-4. Specify the depth of 8 soil layers 
-
+## soil
+In `[soil]` section, users must specify the depth of soil layers. The default settings are identical to PALM's default 8 layers.
 ```python
-dz_soil = np.array([0.01, 0.02, 0.04, 0.06, 0.14, 0.26, 0.54, 1.86]) # this is the default setup in PALM
+[soil]
+# layers for soil temperature and moisture calculation
+# this shall be changed depending on different cases
+
+dz_soil = 0.01, 0.02, 0.04, 0.06, 0.14, 0.26, 0.54, 1.86,
 ```
 
-5. Specify `z_origin` to consider elevated mean grid position (elevated terrain) thus avoiding many NAN and unrealistic extrapolation towards z=0. 
-```python
-z_origin = 0
-```
-If `z_origin` is not known, leave it as 0 m. PALM will automatically exclude all data below the elevated level if terrain is included in the simulation.
-
-6. (**Optional**) Define vertically streched grid spacing. The parameters are identical to those in PALM.
-```python
-dz_stretch_factor = 1.02    # Stretch factor for a vertically stretched grid. Set to 1 if no strech required.
-
-dz_stretch_level = 1200     # Height level above which the grid is to be stretched vertically (in m)
-
-dz_max = 30                 # aloowed maximum vertical grid spacing (in m)
-```
+# Step 2: Run create_dynamic.py
 
 Now run the script `create_dynamic.py`. If it is successfully executed, the dynamic file will be stored in `dynamic_files`. 
 
@@ -113,8 +146,8 @@ Add to your *_p3d file the:
        0.19428751, 0.19848686, 0.23685172])
  deep_soil_temperature = 285.82938
 PALM dynamic input file is ready. Script duration: 0:15:07.212707
-Start time: 2017-02-11 20:00:00
-End time: 2017-02-12 02:00:00
+Start time: 2019-07-01 00:00:00
+End time: 2019-07-01 10:00:00
 Time step: 3600.0 seconds
 ```
 The information above shows that it took 15 minutes to finish processing. The start time, end time and time step are also given showing data in the dynamic driver is as desired. If all the information is correct, then the dynamic driver is ready to use for PALM.
