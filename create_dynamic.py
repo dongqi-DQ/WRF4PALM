@@ -2,15 +2,8 @@
 # WRF4PALM to process data from WRF to PALM v6.0
 # Output of this script is the NetCDF dynamic driver for PALM following
 # PALM Input Data Standard (PIDS) v1.9
-#
-# Users must provide PALM domain configuration first and run the create_cfg.py script 
-#
-# Users must provide their own WRF output file.
-#
-# Users must define the start/end date and time step for the dynamic driver.
-#
-# Users now can define streched vertical grid spacing
-#
+# [Update 6 Jan 2021]
+# Users must provide their PALM domain configuration in the namelist
 # @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 # Acknowledgement: The author would like to acknowledge Ricardo Faria for his initial
 # contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.
