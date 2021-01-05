@@ -1,4 +1,4 @@
-# WRF4PALM [![DOI](https://zenodo.org/badge/258736274.svg)](https://zenodo.org/badge/latestdoi/258736274)  
+# WRF4PALM v1.0 [![DOI](https://zenodo.org/badge/258736274.svg)](https://zenodo.org/badge/latestdoi/258736274)  
 
 **Tools to create a dyanmic driver to enable WRF-PALM offline nesting**
 
