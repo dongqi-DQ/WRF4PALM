@@ -1,15 +1,15 @@
 # WRF4PALM v1.0.1   
 
 **Tools to create a dyanmic driver to enable WRF-PALM offline nesting**
+------
+**[Update info v1.0.1]**
 
-[Update info v1.0.1]
 To make the process of WRF4PALM more straight forward for users, some updates have been made in v1.0.1:  
 1. Users now only need to edit `namelist.dynamic` instead of running two different Python scripts
 2. The two Python scripts `create_cfg.py` and `create_dynamic.py` are combined into one script to save manual work
 3. Modified the calculation of geostrophic winds. 
 
-
-***** Start of README *****
+------
 
 This repository contains the following files:
 
