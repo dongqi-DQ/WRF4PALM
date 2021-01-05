@@ -28,8 +28,8 @@ def domain_location(myProj, centlat, centlon, dx, dy, nx, ny):
     
     return(west, east, south, north)
 
-def generate_cfg(case_name, dx, dy, dz, nx, ny, nz, west, east, south, north, centlat, centlon):
-    cfg = pd.DataFrame({'dx': [dx], 'dy': [dy], 'dz': [dz], 'nx': [nx], 'ny': [ny], 'nz': [nz], 
+def generate_cfg(case_name, dx, dy, dz, nx, ny, nz, west, east, south, north, centlat, centlon, z_origin):
+    cfg = pd.DataFrame({'dx': [dx], 'dy': [dy], 'dz': [dz], 'nx': [nx], 'ny': [ny], 'nz': [nz], 'z_origin': [z_origin],
                         'north': [north], 'south': [south], 'east': [east], 'west': [west], 'centlat':[centlat], 'centlon':[centlon]}) 
     cfg.to_csv('cfg_input/'+ case_name + '.cfg', index=None)
     print('cfg file is ready: '+case_name)
