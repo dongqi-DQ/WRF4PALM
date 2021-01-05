@@ -1,16 +1,16 @@
 [case]
-case_name = "mapm_test_80m_test", 
+case_name = "your_case_name", 
 
 [domain]
-centlat   = -43.529469,                           # centre latitude
-centlon   = 172.599316,                           # centre longitude
-nx        = 200,         
-ny        = 200,   
-nz        = 200,    
-dx        = 80.0, 
-dy        = 80.0, 
-dz        = 16.0,   
-z_origin  = 0.0,   
+centlat   = -43.529469,                           # latitude of domain centre
+centlon   = 172.599316,                           # longitude of domain centre
+nx        = 200,                                  # number of grid points along x-axis
+ny        = 200,                                  # number of grid points along y-axis
+nz        = 200,                                  # number of grid points along z-axis
+dx        = 80.0,                                 # number of grid points along x-axis
+dy        = 80.0,                                 # number of grid points along y-axis
+dz        = 16.0,                                 # number of grid points along z-axis
+z_origin  = 0.0,                                  # elevated mean grid position (elevated terrain)
 
 [stretch]
 # stretch factor for a vertically stretched grid
