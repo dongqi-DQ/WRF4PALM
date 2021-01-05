@@ -20,9 +20,9 @@ dz_stretch_level = 1200.0,      # Height level above which the grid is to be str
 dz_max = 30.0,                  # allowed maximum vertical grid spacing (in m)
 
 [wrf]
-wrf_output = "wrf_output/wrfout_d04_2019_07_01_utc_24hours.nc",
+wrf_output = "wrf_output/your_wrf_output.nc",
 
-interp_mode = 'linear',
+interp_mode = "linear",
 
 #----------------------------------------------------------------#
 # !!! give start and end time to interpolate WRF output here !!! #
