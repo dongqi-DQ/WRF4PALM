@@ -41,8 +41,16 @@ def interp_array_1d(data, out_x) :
 
     '''
     
-    x = np.arange(0, data.shape[0], 1)
-    xvals = np.linspace(0, data.shape[0], out_x)
+def interp_array_1d(data, out_x) :
+
+    '''
+
+    1d matrix data, x number of points out_x. Output a linear interpolated array
+
+    '''
+    
+    x = np.linspace(0, 1, data.shape[0])
+    xvals = np.linspace(0, 1, out_x)
     
     data_res = np.interp(xvals, x, data)
 
