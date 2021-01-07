@@ -2,8 +2,10 @@
 # WRF4PALM to process data from WRF to PALM v6.0
 # Output of this script is the NetCDF dynamic driver for PALM following
 # PALM Input Data Standard (PIDS) v1.9
-# [Update 6 Jan 2021]
-# Users must provide their PALM domain configuration in the namelist
+#
+# [Update v1.0.1]
+# User input should be provided in namelist.dynamic
+#
 # @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 # Acknowledgement: The author would like to acknowledge Ricardo Faria for his initial
 # contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.
@@ -91,6 +93,8 @@ def calc_stretch(z, dz):
 ###############################################################################
 ##--------------------------------- Read CFG --------------------------------##
 ###############################################################################
+
+## Read CFG file if it exists
 try:
     cfg = pd.read_csv('cfg_input/'+case_name + '.cfg')
     print("Reading CFG file")
@@ -255,11 +259,18 @@ nc_wrf.close()
 print("WRF output reading done.",flush=True)
 
 
+#### here to identify PALM domain top
+z_index_wrf = np.argwhere(np.nanmean(z_wrf, axis=(0,2,3))>z[-1])[2][0]
+zstag_index_wrf = np.argwhere(np.nanmean(zstag_wrf, axis=(0,2,3))>z[-1])[2][0]
+z_index_wrf_u = np.argwhere(np.nanmean(z_wrf_u, axis=(0,2,3))>z[-1])[2][0]
+z_index_wrf_v = np.argwhere(np.nanmean(z_wrf_v, axis=(0,2,3))>z[-1])[2][0]
+
+
+####
 time_step_sec = ((times[1]-times[0])).total_seconds()
 times_sec = np.zeros(time_idx.shape[0])
 for t, wrf_t in enumerate(time_idx):
     times_sec[t] = (time_var[wrf_t]-time_var[time_idx[0]]).astype('float')
-
 
 
 def search_nan(var,t,var_type):
@@ -276,7 +287,6 @@ def search_nan(var,t,var_type):
                     print("wrong type given")
     return(var[t,:,:,:])
 
-  
 
 ###############################################################################
 ##--------------------------- horizontal interpolation ----------------------##
@@ -284,30 +294,32 @@ def search_nan(var,t,var_type):
 print("Interpolating horizontal fields...",flush=True)
 
 # Arrays for horizontal interpolation
-u_int = np.empty((times.shape[0], u.shape[1],y.shape[0],xu.shape[0]))
-v_int = np.empty((times.shape[0], v.shape[1],yv.shape[0],x.shape[0]))
-w_int = np.empty((times.shape[0], w.shape[1],y.shape[0],x.shape[0]))
-qv_int = np.empty((times.shape[0], qv.shape[1],y.shape[0],x.shape[0]))
-pt_int = np.empty((times.shape[0], pt.shape[1],y.shape[0],x.shape[0]))
-pres_int = np.empty((times.shape[0], pres.shape[1],y.shape[0],x.shape[0]))
-tk_int = np.empty((times.shape[0], tk.shape[1],y.shape[0],x.shape[0]))
-z_wrf_int = np.empty((times.shape[0],u.shape[1],y.shape[0],x.shape[0]))
-z_wrf_int_u = np.empty((times.shape[0],u.shape[1],y.shape[0],xu.shape[0]))
-z_wrf_int_v = np.empty((times.shape[0],v.shape[1],yv.shape[0],x.shape[0]))
-zstag_wrf_int = np.empty((times.shape[0],w.shape[1],y.shape[0],x.shape[0]))
+u_int = np.empty((times.shape[0], z_index_wrf_u, y.shape[0],xu.shape[0]))
+v_int = np.empty((times.shape[0], z_index_wrf_v, yv.shape[0],x.shape[0]))
+w_int = np.empty((times.shape[0], zstag_index_wrf, y.shape[0],x.shape[0]))
+qv_int = np.empty((times.shape[0], z_index_wrf, y.shape[0],x.shape[0]))
+pt_int = np.empty((times.shape[0], z_index_wrf, y.shape[0],x.shape[0]))
+pres_int = np.empty((times.shape[0], z_index_wrf, y.shape[0],x.shape[0]))
+tk_int = np.empty((times.shape[0], z_index_wrf, y.shape[0],x.shape[0]))
+z_wrf_int = np.empty((times.shape[0],z_index_wrf, y.shape[0],x.shape[0]))
+z_wrf_int_u = np.empty((times.shape[0],z_index_wrf_u, y.shape[0],xu.shape[0]))
+z_wrf_int_v = np.empty((times.shape[0],z_index_wrf_v, yv.shape[0],x.shape[0]))
+zstag_wrf_int = np.empty((times.shape[0],zstag_index_wrf, y.shape[0],x.shape[0]))
 
 for t in tqdm(range(u.shape[0]),ascii=True):
-    for z_idx in range(0,u.shape[1]):
+    for z_idx in range(0, z_index_wrf_u):
         u_int[t,z_idx,:,:] = interp_array_2d(u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
+        z_wrf_int_u[t,z_idx,:,:] = interp_array_2d(z_wrf_u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
+    for z_idx in range(0, z_index_wrf_v):
         v_int[t,z_idx,:,:] = interp_array_2d(v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
+        z_wrf_int_v[t,z_idx,:,:] = interp_array_2d(z_wrf_v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
+    for z_idx in range(0, z_index_wrf):
         qv_int[t,z_idx,:,:] = interp_array_2d(qv[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
         pt_int[t,z_idx,:,:] = interp_array_2d(pt[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
         pres_int[t,z_idx,:,:] = interp_array_2d(pres[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
         tk_int[t,z_idx,:,:] = interp_array_2d(tk[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
         z_wrf_int[t,z_idx,:,:] =  interp_array_2d(z_wrf[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
-        z_wrf_int_u[t,z_idx,:,:] = interp_array_2d(z_wrf_u[t,z_idx,:,:], xu.shape[0], y.shape[0], interp_mode)
-        z_wrf_int_v[t,z_idx,:,:] = interp_array_2d(z_wrf_v[t,z_idx,:,:], x.shape[0], yv.shape[0], interp_mode)
-    for z_idx in range(0,w.shape[1]):
+    for z_idx in range(0, zstag_index_wrf):
         w_int[t,z_idx,:,:] = interp_array_2d(w[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
         zstag_wrf_int[t,z_idx,:,:] =  interp_array_2d(zstag_wrf[t,z_idx,:,:], x.shape[0], y.shape[0], interp_mode)
  
@@ -316,34 +328,17 @@ print("Done.", flush=True)
 ###############################################################################
 ##--------------------------- vertical interpolation-------------------------##
 ###############################################################################
-     
-# Interpolation: unstaggered vetical levels
-u_tmp = np.empty((times.shape[0], z.shape[0], u_int.shape[2], u_int.shape[3]))
-v_tmp = np.empty((times.shape[0], z.shape[0],v_int.shape[2], v_int.shape[3]))
-w_tmp = np.empty((times.shape[0], zw.shape[0],y.shape[0],x.shape[0]))
-qv_tmp = np.empty((times.shape[0], z.shape[0],qv_int.shape[2], qv_int.shape[3]))
-pt_tmp = np.empty((times.shape[0], z.shape[0],pt_int.shape[2], pt_int.shape[3]))
 pres_tmp = np.empty((times.shape[0], z.shape[0],pres_int.shape[2], pres_int.shape[3]))
 tk_tmp = np.empty((times.shape[0], z.shape[0],tk_int.shape[2], tk_int.shape[3]))
 
-for l_idx, l in tqdm(enumerate(z), desc="Interpolating unstaggered vertical levels"):
+for l_idx, l in tqdm(enumerate(z), desc="Interpolating vertical levels for pressure and temperature"):
     for t in range(0, times.shape[0]):
-        qv_tmp[t, int(l_idx), :, :] = interplevel(qv_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
-        pt_tmp[t, int(l_idx), :, :] = interplevel(pt_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
-        u_tmp[t, int(l_idx), :, :] = interplevel(u_int[t, :, :, :], z_wrf_int_u[t,:,:,:], l).data
-        v_tmp[t, int(l_idx), :, :] = interplevel(v_int[t, :, :, :], z_wrf_int_v[t,:,:,:], l).data
         pres_tmp[t, int(l_idx), :, :] = interplevel(pres_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
         tk_tmp[t, int(l_idx), :, :] = interplevel(tk_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
- 
-        
-for lstag_idx, lstag in tqdm(enumerate(zw), desc="Interpolating staggered vertical levels"):    
-    for t in range(0,times.shape[0]):
-        w_tmp[t, int(lstag_idx),:, :] = interplevel(w_int[t,:,:,:], zstag_wrf_int[t,:,:,:], lstag).data
- 
-print(flush=True)
-print('Vertical interpolation done.',flush=True)
 
-
+###############################################################################
+##----------------------------- geostrophic winds ---------------------------##
+###############################################################################
 # calculate geostrophic winds at every levels
 # latitudes and longitudes are still required here
 def rolling_mean(var, window):
@@ -368,15 +363,43 @@ for t in tqdm(range(pres_tmp.shape[0]),ascii=True, desc="Calculating geostropihc
     geo_wind_u_f[t, :] = interp_array_1d(rolling_mean(geo_wind_u[t, :], 10), z.shape[0])
     geo_wind_v_f[t, :] = interp_array_1d(rolling_mean(geo_wind_v[t, :], 10), z.shape[0])
     
-    poly_coeffs_u = np.polyfit(z, geo_wind_u_f[t,:], 5)
+    poly_coeffs_u = np.polyfit(z, geo_wind_u_f[t,:], 6)
     geo_wind_u_f[t,:] = np.polyval(poly_coeffs_u, z)
-    poly_coeffs_v = np.polyfit(z, geo_wind_v_f[t,:], 5)
+    poly_coeffs_v = np.polyfit(z, geo_wind_v_f[t,:], 6)
     geo_wind_v_f[t,:] = np.polyval(poly_coeffs_v, z)
         
 print(flush=True)
 print("Geostrophic wind calculation done.",flush=True)
 
+del tk_tmp
 
+# Interpolation: unstaggered vetical levels
+u_tmp = np.empty((times.shape[0], z.shape[0], u_int.shape[2], u_int.shape[3]))
+v_tmp = np.empty((times.shape[0], z.shape[0],v_int.shape[2], v_int.shape[3]))
+w_tmp = np.empty((times.shape[0], zw.shape[0],y.shape[0],x.shape[0]))
+qv_tmp = np.empty((times.shape[0], z.shape[0],qv_int.shape[2], qv_int.shape[3]))
+pt_tmp = np.empty((times.shape[0], z.shape[0],pt_int.shape[2], pt_int.shape[3]))
+
+
+for l_idx, l in tqdm(enumerate(z), desc="Interpolating unstaggered vertical levels"):
+    for t in range(0, times.shape[0]):
+        qv_tmp[t, int(l_idx), :, :] = interplevel(qv_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
+        pt_tmp[t, int(l_idx), :, :] = interplevel(pt_int[t, :, :, :], z_wrf_int[t,:,:,:], l).data
+        u_tmp[t, int(l_idx), :, :] = interplevel(u_int[t, :, :, :], z_wrf_int_u[t,:,:,:], l).data
+        v_tmp[t, int(l_idx), :, :] = interplevel(v_int[t, :, :, :], z_wrf_int_v[t,:,:,:], l).data
+        
+for lstag_idx, lstag in tqdm(enumerate(zw), desc="Interpolating staggered vertical levels"):    
+    for t in range(0,times.shape[0]):
+        w_tmp[t, int(lstag_idx),:, :] = interplevel(w_int[t,:,:,:], zstag_wrf_int[t,:,:,:], lstag).data
+ 
+print(flush=True)
+print('Vertical interpolation done.',flush=True)
+
+
+
+###############################################################################
+##-------------------------------- surface nans -----------------------------##
+###############################################################################
 
 for t in tqdm(range(0,u_tmp.shape[0]),ascii=True,desc = "Resolving surface NaNs"):
     u_tmp[t,:,:,:] = search_nan(u_tmp,t,'uv')
@@ -384,30 +407,19 @@ for t in tqdm(range(0,u_tmp.shape[0]),ascii=True,desc = "Resolving surface NaNs"
     pt_tmp[t,:,:,:] = search_nan(pt_tmp,t,'s')
     qv_tmp[t,:,:,:] = search_nan(qv_tmp,t,'s')
     pres_tmp[t,:,:,:] = search_nan(pres_tmp,t,'s')
-    tk_tmp[t,:,:,:] = search_nan(tk_tmp,t,'s')
     w_tmp[t,:,:,:] = search_nan(w_tmp,t,'w')
 
  
 print(flush='True')
 
 
-
-
 # Genearte initial profiles
-u_init = np.zeros(z.shape[0])
-v_init = np.zeros(z.shape[0])
-w_init = np.zeros(zw.shape[0])
-qv_init = np.zeros(z.shape[0])
-pt_init = np.zeros(z.shape[0])
+u_init = np.nanmean(u_tmp[0,:,:,:], axis=(1,2))
+v_init = np.nanmean(v_tmp[0,:,:,:], axis=(1,2))
+w_init = np.nanmean(w_tmp[0,:,:,:], axis=(1,2))
+qv_init = np.nanmean(qv_tmp[0,:,:,:], axis=(1,2))
+pt_init = np.nanmean(pt_tmp[0,:,:,:], axis=(1,2))
 
-
-for i in range(0,z.shape[0]):
-    u_init[i] = np.nanmean(u_tmp[0,i,:,:].reshape(1,-1),axis=1)
-    v_init[i] = np.nanmean(v_tmp[0,i,:,:].reshape(1,-1),axis=1)
-    qv_init[i] = np.nanmean(qv_tmp[0,i,:,:].reshape(1,-1),axis=1)
-    pt_init[i] = np.nanmean(pt_tmp[0,i,:,:].reshape(1,-1),axis=1)
-for i in range(0, zw.shape[0]):
-    w_init[i] = np.nanmean(w_tmp[0,i,:,:].reshape(1,-1),axis=1)
 
 
 pres_surf = pres_tmp[:,1,:,:]
@@ -416,6 +428,10 @@ for t in range(0, times.shape[0]):
     pres_init.append(np.nanmean(pres_surf[t,:,:]))
 
 pres_init = np.array(pres_init)
+
+###############################################################################
+##----------------------- soil moisture and temperature ---------------------##
+###############################################################################
 
 # Soil temperature and moisture calculation
 print('Calculating soil temperature and moisture from WRF', flush=True)
@@ -452,7 +468,7 @@ for i in range(dz_soil.shape[0]):
 
 ##############################################################################
 # Write to NetCDF file
-# Based on INIFOR format
+nc_output_name = f'dynamic_files/{case_name}_dynamic_{ts}_{start_year}_{start_month}_{start_day}_{start_hour}'
 print('Writing NetCDF file',flush=True)
 nc_output = xr.Dataset()
 res_origin = str(dx) + 'x' + str(dy) + ' m'
@@ -480,7 +496,7 @@ nc_output['zw'] = xr.DataArray(zw-z_origin, dims=['zw'], attrs={'units':'m'})
 nc_output['time'] = xr.DataArray(times_sec, dims=['time'], attrs={'units':'seconds'})
 
 
-nc_output.to_netcdf(f'dynamic_files/{case_name}_dynamic_{ts}')
+nc_output.to_netcdf(nc_output_name)
 
 
 
@@ -571,10 +587,10 @@ nc_output['ls_forcing_vg'] = xr.DataArray(geo_wind_v_f,dims=['time','z'],
 
 for var in nc_output.data_vars:
     encoding = {var: {'dtype': 'float32', '_FillValue': -9999, 'zlib':True}}
-    nc_output[var].to_netcdf(f'dynamic_files/{case_name}_dynamic_{ts}', encoding=encoding, mode='a')
+    nc_output[var].to_netcdf(nc_output_name, encoding=encoding, mode='a')
 
 
-print('Add to your *_p3d file the: ' + '\n soil_temperature = ' + repr(init_soil_t.mean(axis=1).mean(axis=1)) +
+print('Add to your *_p3d file: ' + '\n soil_temperature = ' + repr(init_soil_t.mean(axis=1).mean(axis=1)) +
       '\n soil_moisture = ' + repr(init_soil_m.mean(axis=1).mean(axis=1)) + '\n deep_soil_temperature = ' + repr(init_soil_tmn))
 
 end = datetime.now()
@@ -582,5 +598,5 @@ print('PALM dynamic input file is ready. Script duration: {}'.format(end - start
 print('Start time: '+str(times[0]))
 print('End time: '+str(times[-1]))
 print('Time step: '+str(time_step_sec)+' seconds')
-del u_int, v_int, w_int, qv_int, pt_int, pres_int#, tk_int
+del u_int, v_int, w_int, qv_int, pt_int, pres_int, tk_int
 gc.collect()
