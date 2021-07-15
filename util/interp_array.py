@@ -33,13 +33,7 @@ def interp_array_2d(data, out_x, out_y, method) :
     return (data_res)
 
 
-def interp_array_1d(data, out_x) :
 
-    '''
-
-    1d matrix data, x number of points out_x. Output a linear interpolated array
-
-    '''
     
 def interp_array_1d(data, out_x) :
 
