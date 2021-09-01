@@ -117,15 +117,17 @@ End time: 2017-02-12 02:00:00
 Time step: 3600.0 seconds
 ```
 The information above shows that it took 15 minutes to finish processing. The start time, end time and time step are also given showing data in the dynamic driver is as desired. If all the information is correct, then the dynamic driver is ready to use for PALM.
-
-***** End of README *****
+--------------------------------------------------------------------------------------------
+### End of README 
+--------------------------------------------------------------------------------------------
 
 Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/WRF2PALM). 
 
 A full documentation is still under construction, if you have any queries please contact the author.
 
+--------------------------------------------------------------------------------------------
 **Contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)**
 
-**How to cite. **
+**How to cite**
 
 Lin, D., Khan, B., Katurji, M., Bird, L., Faria, R., and Revell, L. E.: WRF4PALM v1.0: a mesoscale dynamical driver for the microscale PALM model system 6.0, Geosci. Model Dev., 14, 2503–2524, https://doi.org/10.5194/gmd-14-2503-2021, 2021. 
