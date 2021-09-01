@@ -60,7 +60,7 @@ ts          = '1hour'                     #  specify the update frequency of bou
 ```
 
 **Remark:**   
-- here users can define the start/end time and update frequency depending on their own requirments. For example, I have hourly WRF output, if I only want the boundary conditions update every 2 hours. The `interval` is set to 2 and `ts` is 2hour, which gives a dynamic driver with filename `case_name_2hour`. If you have 10-minute WRF output and want hourly update in PALM, then `interval = 6` and `ts = '2hour'` (simple math :).  
+- here users can define the start/end time and update frequency depending on their own requirments. For example, I have hourly WRF output, if I only want the boundary conditions update every 2 hours. The `interval` is set to 2 and `ts` is 2hour, which gives a dynamic driver with filename `case_name_2hour`. If you have 10-minute WRF output and want hourly update in PALM, then `interval = 6` and `ts = '1hour'` (simple math :).  
 - When the update frequency is not a divisor of the total run time, the script will round up the last step of time to avoid automatic termination of PALM. For example, if one has a 24-hour PALM simulation (`end_time = 86400`) with 5-hour update of boundary conditions, the time stamp in the dynamic file should be 0s, 18000s, 36000s, 54000s, 72000s, 86400s (instead of 90000s because 86400s may reach the final time step in WRF output). If the 86400s step is not in the dynamic file, PALM may return some errors and terminate at the 72000s step. 
 
 
