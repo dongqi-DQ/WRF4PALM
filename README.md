@@ -2,7 +2,6 @@
 
 **Tools to create a dyanmic driver to enable WRF-PALM offline nesting**
 
-
 This repository contains the following files:
 
 - `create_cfg.py` - Python script to create a cfg file including PALM domain configuration 
@@ -126,3 +125,7 @@ Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/
 A full documentation is still under construction, if you have any queries please contact the author.
 
 **Contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)**
+
+**How to cite. **
+
+Lin, D., Khan, B., Katurji, M., Bird, L., Faria, R., and Revell, L. E.: WRF4PALM v1.0: a mesoscale dynamical driver for the microscale PALM model system 6.0, Geosci. Model Dev., 14, 2503–2524, https://doi.org/10.5194/gmd-14-2503-2021, 2021. 
