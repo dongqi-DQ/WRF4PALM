@@ -1,0 +1,51 @@
+[case]
+case_name = "wrf4palm_test", 
+max_pool = 4,
+
+[domain]
+palm_proj = "EPSG:2193",    # projection of PALM
+centlat   = -35.7853,                           # latitude of domain centre
+centlon   = 174.1,                           # longitude of domain centre
+nx        = 200,                                  # number of grid points along x-axis
+ny        = 200,                                  # number of grid points along y-axis
+nz        = 120,                                  # number of grid points along z-axis
+dx        = 50.0,                                 # number of grid points along x-axis
+dy        = 50.0,                                 # number of grid points along y-axis
+dz        = 10.0,                                 # number of grid points along z-axis
+z_origin  = 0.0,                                  # elevated mean grid position (elevated terrain)
+
+[stretch]
+dz_stretch_factor = 1.0,        # stretch factor for a vertically stretched grid
+                                # set this to 1.0 if no streching required
+dz_stretch_level = 1200.0,      # Height level above which the grid is to be stretched vertically (in m)
+
+dz_max = 30.0,                  # allowed maximum vertical grid spacing (in m)
+
+
+[wrf]
+wrf_path = "./wrf_output/",
+wrf_output = "wrfout_d04_2020-12-25_12-00-00", "wrfout_d04_2020-12-26_12-00-00"
+
+interp_mode = "linear",
+
+start_year = 2020,
+start_month = 12,
+start_day = 25,
+start_hour = 13,
+
+end_year = 2020,
+end_month = 12,
+end_day = 26,
+end_hour = 10,
+
+#interval = 6,
+#ts = '1hour',
+#wrf_ts = 3600.0,            # WRF output time frequency in seconds
+dynamic_ts = 3600.0,         # PALM dynamic driver update frequency
+
+[soil]
+# layers for soil temperature and moisture calculation
+# this shall be changed depending on different cases
+
+dz_soil = 0.01, 0.02, 0.04, 0.06, 0.14, 0.26, 0.54, 1.86,
+msoil = 0.3, # dummy value in case soil moisture from WRF output is 0.0
