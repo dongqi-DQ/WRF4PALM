@@ -1,6 +1,6 @@
 # WRF4PALM v1.1 
 
-*if you wish to use WRF4PALM v1.0, please go to https://github.com/dongqi-DQ/WRF4PALM/tree/v1.0*
+*If you wish to use WRF4PALM v1.0, please go to https://github.com/dongqi-DQ/WRF4PALM/tree/v1.0*
 
 ## Contents
 1. [What's new?](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#whats-new-in-v11)
