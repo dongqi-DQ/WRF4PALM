@@ -167,7 +167,7 @@ End time: 2020-12-26T10:00:00.000000000
 Time step: 3600.0 seconds
 ```
 
-If the execution is successful, the dynamic driver will be ready in `dynamic_files` with the `case_name` and start timestamp user specified. A cfg reference file will also be stored in `cfg_files` which contains domain configuration and soil temperatuer and moisture information.
+If the execution is successful, the dynamic driver will be ready in `dynamic_files` with the `case_name` and start timestamp user specified. A cfg reference file will also be stored in `cfg_files` which contains domain configuration and soil temperatuer and moisture information. An example dynamic driver and an example cfg file are provided in `dynamic_files` and `cfg_files`, respectively.
 
 ## Quick compare WRF & PALM
 
@@ -215,8 +215,8 @@ Note that the time series are horizontally averaged and hence the comparison onl
 
 # Note  
 - We noticed that PALM uses a water temperature of 283 K as default, which may lead to a stable layer over water bodies if there are any in the PALM simulation domain. We recommend users to modify the water temperatuer using static driver. 
-
 - We may release a static driver generator using global data set from Google earth engine and SST from ERA5.
+- Geostrophic winds only give an estimation while the accuracy still needs further discussion and investigation. This problem is the same in INIFOR.
 - We encourage WRF4PALM users to use the GitHub **Issue** system if they encountered any issues or problems using WRF4PALM. In this way, if multiple users have the same problem, the communication and trouble shooting will be easier.
 
 --------------------------------------------------------------------------------------------
