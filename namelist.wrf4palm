@@ -38,9 +38,6 @@ end_month = 12,
 end_day = 26,
 end_hour = 10,
 
-#interval = 6,
-#ts = '1hour',
-#wrf_ts = 3600.0,            # WRF output time frequency in seconds
 dynamic_ts = 3600.0,         # PALM dynamic driver update frequency
 
 [soil]
