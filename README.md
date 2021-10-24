@@ -7,7 +7,7 @@
 2. [Instructions](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#instrustions)
 3. [Quick comparison script](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#quick-compare-wrf--palm)
 
-## what's new in v1.1?
+## What's new in v1.1?
 - multiple WRF output files are allowed
 - move from wrf-python to salem to modify RAM usage and computation time 
 - use xarray instead of netCDF4 package to modify RAM usage and computation time
@@ -24,17 +24,17 @@
 2. Provide your own WRF output
 3. Edit [namelist](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#namelist)
 4. [Run WRF4PALM](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#one-line-command)
-5. 
+
 
 ### namelist 
 In v1.1, users don't have to edit the main script, and only need to edit the namelist file to provide their input (for examples please see `namelist.wrf4palm`).
 
 There are 5 sections in the namelist:
-- case: users to provide case name and multiprocessing information
-- domain: PALM domain configuration
-- stretch: if a vertically streched grid is used
-- wrf: information about WRF output and start/end time in the dynamic driver
-- soil: soil layers and dummy soil moisture information
+- [case](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#case): users to provide case name and multiprocessing information
+- [domain](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#domain): PALM domain configuration
+- [stretch](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#stretch): if a vertically streched grid is used
+- [wrf](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#wrf): information about WRF output and start/end time in the dynamic driver
+- [soil](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#soil): soil layers and dummy soil moisture information
 
 #### case
 In the `case` section, users need to provide their case name and the maximum number of CPUs they want to use in WRF4PALM (here the number is 4).
