@@ -1,11 +1,13 @@
-# WRF4PALM v1.1 README
+# WRF4PALM v1.1 
 
-# Contents
-1. What's new?
-2. How to use WRF4PALM namelist?
-3. Quick comparison between WRF and PALM dynamic driver
+*if you wish to use WRF4PALM v1.0, please go to https://github.com/dongqi-DQ/WRF4PALM/tree/v1.0*
 
-# what's new in v1.1?
+## Contents
+1. [What's new?](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#whats-new-in-v11)
+2. [Instructions](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#instrustions)
+3. [Quick comparison script]()
+
+## what's new in v1.1?
 - move from wrf-python to salem to modify RAM usage 
 - use xarray instead of netCDF4 package to modify RAM usage
 - apply multiprocessing to improve computation time 
@@ -15,7 +17,7 @@
 - allow users to specify the projection of PALM simulation
 - geostrophic winds are estimated using geopotential height instead of pressure 
 
-# How to use?
+# Instrustions
 1. Download the entire source code to local
 2. Provide your own WRF output
 3. Edit namelist
@@ -24,7 +26,7 @@
 # namelist 
 
 
-
+## Quick compare WRF & PALM
 
 
 # Remark  
