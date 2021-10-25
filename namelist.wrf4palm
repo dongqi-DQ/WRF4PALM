@@ -24,7 +24,7 @@ dz_max = 30.0,                  # allowed maximum vertical grid spacing (in m)
 
 [wrf]
 wrf_path = "./wrf_output/",
-wrf_output = "wrfout_d04_2020-12-25_12-00-00", "wrfout_d04_2020-12-26_12-00-00"
+wrf_output = "wrfout_d04_2020-12-25_12-00-00", "wrfout_d04_2020-12-26_12-00-00",
 
 interp_mode = "linear",
 
@@ -38,9 +38,6 @@ end_month = 12,
 end_day = 26,
 end_hour = 10,
 
-#interval = 6,
-#ts = '1hour',
-#wrf_ts = 3600.0,            # WRF output time frequency in seconds
 dynamic_ts = 3600.0,         # PALM dynamic driver update frequency
 
 [soil]
