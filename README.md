@@ -215,10 +215,10 @@ Note that the time series are horizontally averaged and hence the comparison onl
 
 
 # Note  
-- We noticed that PALM uses a water temperature of 283 K as default, which may lead to a stable layer over water bodies if there are any in the PALM simulation domain. We recommend users to modify the water temperatuer using static driver. 
-- We may release a static driver generator using global data set from Google earth engine and SST from ERA5.
-- Geostrophic winds only give an estimation while the accuracy still needs further discussion and investigation. This problem is the same in INIFOR.
-- We encourage WRF4PALM users to use the GitHub **Issue** system if they encountered any issues or problems using WRF4PALM. In this way, if multiple users have the same problem, the communication and trouble shooting will be easier.
+- We noticed that PALM uses a water temperature of 283 K as default, which may lead to a stable layer over water bodies (if there are any in the PALM simulation domain). We recommend users to modify the water temperatuer using the static driver. 
+- We may release a static driver generator using global data set from Google earth engine and SST from ERA5 by the end of the year.
+- Geostrophic winds are only an estimation while the accuracy of the estimation still needs further discussion and investigation. This problem is the same in INIFOR.
+- We encourage WRF4PALM users to use the GitHub **Issue** system if they encountered any issues or problems using WRF4PALM such that communications and trouble shooting will be easier.
 
 --------------------------------------------------------------------------------------------
 ### End of README 
@@ -226,7 +226,7 @@ Note that the time series are horizontally averaged and hence the comparison onl
 
 Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/WRF2PALM). 
 
-A full documentation is still under construction, if you have any queries please contact the author or open an issue.
+A full documentation is still under construction, if you have any queries please contact the author or open a new issue.
 
 --------------------------------------------------------------------------------------------
 **Contact: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)**
