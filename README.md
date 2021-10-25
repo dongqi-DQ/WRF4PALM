@@ -1,4 +1,5 @@
-# WRF4PALM v1.1 
+# WRF4PALM v1.1  [![DOI](https://zenodo.org/badge/258736274.svg)](https://zenodo.org/badge/latestdoi/258736274)
+
 
 *If you wish to use WRF4PALM v1.0, please go to https://github.com/dongqi-DQ/WRF4PALM/tree/v1.0*
 
