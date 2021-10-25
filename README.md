@@ -212,7 +212,9 @@ Please enter the vertical level in m:
 Once the vertical level is given, the script will return a comparison plot.  
 Note that the time series are horizontally averaged and hence the comparison only gives a approximate reference regarding the performance of WRF4PALM.
 
-
+## Remark
+- [`Surface_NaN_Solver.pdf`](https://github.com/dongqi-DQ/WRF4PALM/blob/v1.1/Surface_NaN_Solver.pdf) provides a short documentation explaining how the surface nans are resolved.
+- The WRF4PALM v1.1 python environemnt is available in [`wrf4palm_env.yml`](https://github.com/dongqi-DQ/WRF4PALM/blob/v1.1/wrf4palm_env.yml). 
 
 # Note  
 - We noticed that PALM uses a water temperature of 283 K as default, which may lead to a stable layer over water bodies (if there are any in the PALM simulation domain). We recommend users to modify the water temperatuer using the static driver. 
