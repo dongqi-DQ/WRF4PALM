@@ -368,6 +368,7 @@ def ts(ds_drop, ds_dynamic, var, level=0):
 
     for i, varplot in enumerate(palm_var_list):
         wrf_ds = wrf_ds_list[i]
+        # i<4 -> lateral boundaries
         if i <4:
             if palm_var == "w":
                 _, palm_idx = nearest(ds_dynamic.zw.data, level)
@@ -376,13 +377,16 @@ def ts(ds_drop, ds_dynamic, var, level=0):
                 _, palm_idx = nearest(ds_dynamic.z.data, level)
                 palm_ds = ds_dynamic[varplot].isel(z=palm_idx).mean(axis=1)
             wrf_ds_plot = wrf_ds.mean(axis=1)
+            plt_title = f"{varplot} at {level} m (nearest)"
+        # top boundary
         else:
             palm_ds = ds_dynamic[varplot].mean(axis=(1,2))
             wrf_ds_plot = wrf_ds.mean(axis=(1,2))
+            plt_title = f"{varplot}"
         plt.subplot(5,1, i+1)
         plt.plot(ds_drop.time, wrf_ds_plot, 'x-', label="WRF")
         plt.plot(ds_drop.time, palm_ds, "--", label="PALM")
-        plt.title(f"{varplot} at {level} m (nearest)") 
+        plt.title(plt_title) 
         plt.xlabel("time")
         plt.legend()
         plt.grid(alpha=0.7)
