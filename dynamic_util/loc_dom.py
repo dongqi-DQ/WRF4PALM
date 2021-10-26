@@ -10,7 +10,10 @@
 #--------------------------------------------------------------------------------#
 
 import pandas as pd
-from pyproj import Proj,  Transformer
+from pyproj import Proj,  Transformer, CRS
+from pyproj.aoi import AreaOfInterest
+from pyproj.database import query_utm_crs_info
+from math import ceil, floor
 
 def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
     '''
@@ -18,9 +21,26 @@ def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
     domain centre 
     '''
     if palm_proj == wgs_proj:
-        # no conversion needed when latlong projection is used
-        centx =  centlon
-        centy =  centlat
+        # convert to UTM to calculate the lat/lon
+        utm_crs_list = query_utm_crs_info(
+            datum_name="WGS 84",
+            area_of_interest=AreaOfInterest(
+                west_lon_degree=centlon,
+                south_lat_degree=centlat,
+                east_lon_degree=centlon,
+                north_lat_degree=centlat,
+            ),
+        )
+        utm_crs = CRS.from_epsg(utm_crs_list[0].code)
+        trans_utm2wgs = Transformer.from_proj( utm_crs, wgs_proj)
+        trans_wgs2utm = Transformer.from_proj( wgs_proj, utm_crs)
+        
+        centx, centy =  trans_wgs2utm.transform(centlon, centlat)
+        west_utm, east_utm   = centx-nx*dx/2, centx+nx*dx/2
+        north_utm, south_utm = centy+ny*dy/2, centy-ny*dy/2
+        west, north = trans_utm2wgs.transform( west_utm,north_utm)
+        east, south = trans_utm2wgs.transform( east_utm,south_utm)
+        
     else:
     # change lat/lon to UTM to calculate the coordinates of the domain
 
@@ -29,8 +49,8 @@ def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
         transformer = Transformer.from_proj(inProj, outProj)
         centx, centy = transformer.transform(centlon,centlat)
     
-    west, east   = centx-nx*dx/2, centx+nx*dx/2
-    north, south = centy+ny*dy/2, centy-ny*dy/2
+        west, east   = centx-nx*dx/2, centx+nx*dx/2
+        north, south = centy+ny*dy/2, centy-ny*dy/2
     
     return west, east, south, north
 

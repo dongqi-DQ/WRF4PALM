@@ -185,25 +185,27 @@ wgs_proj = Proj(proj='latlong', datum='WGS84', ellips='sphere')
 
 if map_proj == 6:
     wrf_proj = wgs_proj
+    xx_wrf = ds_wrf.lon.data
+    yy_wrf = ds_wrf.lat.data
 else:
     wrf_proj = Proj(proj=wrf_map_dict[map_proj], # projection type
                     lat_1=ds_wrf.TRUELAT1, lat_2=ds_wrf.TRUELAT2, 
                     lat_0=ds_wrf.MOAD_CEN_LAT, lon_0=ds_wrf.STAND_LON, 
                     a=6370000, b=6370000) # The Earth is a perfect sphere in WRF
 
-# Easting and Northings of the domains center point
-trans_wgs2wrf = Transformer.from_proj(wgs_proj, wrf_proj)
-e, n = trans_wgs2wrf.transform(ds_wrf.CEN_LON, ds_wrf.CEN_LAT)
-# e, n = transform(wgs_proj, wrf_proj, ds_wrf.CEN_LON, ds_wrf.CEN_LAT)
-# WRF Grid parameters
-dx_wrf, dy_wrf = ds_wrf.DX, ds_wrf.DY
-nx_wrf, ny_wrf = ds_wrf.dims['west_east'], ds_wrf.dims['south_north']
-# Down left corner of the domain
-x0_wrf = -(nx_wrf-1) / 2. * dx_wrf + e
-y0_wrf = -(ny_wrf-1) / 2. * dy_wrf + n
-# 2d grid
-xx_wrf, yy_wrf = np.meshgrid(np.arange(nx_wrf) * dx_wrf + x0_wrf,
-                             np.arange(ny_wrf) * dy_wrf + y0_wrf)
+    # Easting and Northings of the domains center point
+    trans_wgs2wrf = Transformer.from_proj(wgs_proj, wrf_proj)
+    e, n = trans_wgs2wrf.transform(ds_wrf.CEN_LON, ds_wrf.CEN_LAT)
+    # WRF Grid parameters
+    dx_wrf, dy_wrf = ds_wrf.DX, ds_wrf.DY
+    nx_wrf, ny_wrf = ds_wrf.dims['west_east'], ds_wrf.dims['south_north']
+    # Down left corner of the domain
+    x0_wrf = -(nx_wrf-1) / 2. * dx_wrf + e
+    y0_wrf = -(ny_wrf-1) / 2. * dy_wrf + n
+    # 2d grid
+    xx_wrf, yy_wrf = np.meshgrid(np.arange(nx_wrf) * dx_wrf + x0_wrf,
+                                 np.arange(ny_wrf) * dy_wrf + y0_wrf)
+    
 ## if no PALM projection is given by user, 
 #  then use WGS84 lat/lon and WRF projection to locate domain
 # otherwise use the user specified projection
@@ -213,17 +215,22 @@ else:
     palm_proj = Proj(init = palm_proj_code)
 
 trans_wrf2palm = Transformer.from_proj(wrf_proj, palm_proj)
-    
 lons_wrf,lats_wrf = trans_wrf2palm.transform(xx_wrf, yy_wrf)
 
-west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny)
+west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon, 
+                                           dx, dy, nx, ny)
 
 ## write a cfg file for future reference
-generate_cfg(case_name, dx, dy, dz, nx, ny, nz, west, east, south, north, centlat, centlon,z_origin)
+generate_cfg(case_name, dx, dy, dz, nx, ny, nz, 
+             west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
 south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
 west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]  
+
+# in case negative longitudes are used
+if east_idx-west_idx<0:
+    east_idx, west_idx = west_idx, east_idx
 
 # If PALM domain smaller than one WRF grid spacing
 if north_idx-south_idx<1 or east_idx-west_idx<1:
