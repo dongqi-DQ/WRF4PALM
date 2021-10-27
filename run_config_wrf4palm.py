@@ -27,6 +27,7 @@ from functools import partial
 from pyproj import Proj, Transformer
 import configparser
 import ast
+from glob import glob
 import numpy as np
 from math import ceil, floor
 from datetime import datetime, timedelta
@@ -123,6 +124,10 @@ else:
 # remove duplicated timestamps
 ds_wrf = xr.Dataset()
 with salem.open_mf_wrf_dataset(wrf_files) as ds_raw:
+    ## in case xtime is created as time dimension
+    if len(ds_raw["time"])==1:
+        ds_raw = ds_raw.isel(time=0)
+        ds_raw = ds_raw.rename({"xtime": "time"})
     for variables in ds_raw.data_vars:
         ds_wrf[variables] = ds_raw[variables].drop_duplicates("time", keep="last")
     ds_wrf.attrs = ds_raw.attrs
