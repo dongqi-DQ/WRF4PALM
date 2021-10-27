@@ -232,8 +232,8 @@ generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
 # find indices of closest values
 south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
 west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]  
-
 # in case negative longitudes are used
+# these two lines may be redundant need further tests 27 Oct 2021 
 if east_idx-west_idx<0:
     east_idx, west_idx = west_idx, east_idx
 
