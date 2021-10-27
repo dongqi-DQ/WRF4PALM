@@ -33,7 +33,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 from functools import partial
 from multiprocess import Pool
-from dynamic_util.nearest import nearest_2d, nearest
+from dynamic_util.nearest import nearest_2d, nearest_1d
 from dynamic_util.loc_dom import calc_stretch, domain_location, generate_cfg
 from dynamic_util.process_wrf import zinterp, multi_zinterp, process_top
 from dynamic_util.geostrophic import calc_geostrophic_wind
@@ -362,8 +362,8 @@ def ts(ds_drop, ds_dynamic, var, level=0):
     palm_var_list = [ls_str+palm_var for ls_str in palm_bc_list]
 
     wrf_z = ds_drop.Z.mean(dim=["time", "south_north", "west_east"]).load().data
-    _, wrf_top_idx = nearest(wrf_z, ds_dynamic.z.data[-1])
-    _, wrf_idx = nearest(wrf_z, level)
+    _, wrf_top_idx = nearest_1d(wrf_z, ds_dynamic.z.data[-1])
+    _, wrf_idx = nearest_1d(wrf_z, level)
     wrf_ds_list = [ds_drop[wrf_var].isel(bottom_top = wrf_idx, west_east=0),
                    ds_drop[wrf_var].isel(bottom_top = wrf_idx, west_east=-1),
                    ds_drop[wrf_var].isel(bottom_top = wrf_idx, south_north=0),
@@ -376,10 +376,10 @@ def ts(ds_drop, ds_dynamic, var, level=0):
         # i<4 -> lateral boundaries
         if i <4:
             if palm_var == "w":
-                _, palm_idx = nearest(ds_dynamic.zw.data, level)
+                _, palm_idx = nearest_1d(ds_dynamic.zw.data, level)
                 palm_ds = ds_dynamic[varplot].isel(zw=palm_idx).mean(axis=1)
             else:
-                _, palm_idx = nearest(ds_dynamic.z.data, level)
+                _, palm_idx = nearest_1d(ds_dynamic.z.data, level)
                 palm_ds = ds_dynamic[varplot].isel(z=palm_idx).mean(axis=1)
             wrf_ds_plot = wrf_ds.mean(axis=1)
             plt_title = f"{varplot} at {level} m (nearest)"

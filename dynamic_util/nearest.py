@@ -29,7 +29,7 @@ def nearest_2d(array, number):
     
     return(nearest_number[0], nearest_index)
 
-def nearest(array, number):
+def nearest_1d(array, number):
     
     '''
     
