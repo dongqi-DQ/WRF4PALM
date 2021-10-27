@@ -104,6 +104,8 @@ dynamic_ts = 3600.0,         # PALM dynamic driver update frequency (seconds)
 
 ```
 
+**Note**: leading zeros are not permitted in the datetime configuration. For example, if the `start_month` is January, then the namelist should have `start_month = 1,` instead of `start_month = 01,`.
+
 #### soil
 In the `soil` section, users need to config the soil layers (`dz_soil`). In case when soil moisture output in WRF is all zeros (due to WRF's parameterisation), a dummy value can be chosen (e.g. `msoil = 0.3,`).
 
