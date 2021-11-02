@@ -337,7 +337,6 @@ for iy in tqdm(range(0,len(y)),position=0, leave=True):
 #-------------------------------------------------------------------------------
 print("Start vertical interpolation")
 # create an empty dataset to store interpolated data
-ds_interp["Z"] = ds_interp["Z"].load()
 ds_we = ds_interp.isel(west_east=[0,-1])
 ds_sn = ds_interp.isel(south_north=[0,-1])
 
