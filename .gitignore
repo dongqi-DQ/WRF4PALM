@@ -3,3 +3,5 @@ dynamic_util/__pycache__/
 cfg_files/*.cfg
 
 *.cfg
+
+dynamic_files/
