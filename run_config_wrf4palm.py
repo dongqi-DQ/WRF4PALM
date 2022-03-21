@@ -52,7 +52,7 @@ settings_cfg = configparser.ConfigParser(inline_comment_prefixes='#')
 config = configparser.RawConfigParser()
 config.read(sys.argv[1])#"namelist.test")
 case_name =  ast.literal_eval(config.get("case", "case_name"))[0]
-max_pool =  ast.literal_eval(config.get("case", "max_pool"))[0]
+max_pool  =  ast.literal_eval(config.get("case", "max_pool" ))[0]
 
 palm_proj_code = ast.literal_eval(config.get("domain", "palm_proj"))[0]
 centlat = ast.literal_eval(config.get("domain", "centlat"))[0]
@@ -367,7 +367,7 @@ ds_we = ds_we.load()
 print("load ds_sn")
 ds_sn = ds_sn.load()
 
-print("load ds_we_unstag")
+print("load ds_we_ustag")
 ds_we_ustag = ds_we_ustag.load()
 ds_sn_ustag = ds_sn_ustag.load()
 
@@ -436,7 +436,7 @@ v_top = np.zeros((len(all_ts), len(yv), len(x)))
 w_top = np.zeros((len(all_ts), len(y), len(x)))
 qv_top = np.zeros((len(all_ts), len(y), len(x)))
 pt_top = np.zeros((len(all_ts), len(y), len(x)))
-
+print("Processing top boundary conditions...loop")
 for var in ds_interp.data_vars:
     if var not in varbc_list:
         ds_interp = ds_interp.drop(var)
@@ -444,7 +444,7 @@ for var in ds_interp.data_vars:
         ds_interp_u = ds_interp_u.drop(var)
     if var not in ["V", "Z"]:
         ds_interp_v = ds_interp_v.drop(var)
-
+print("Processing top boundary conditions...load")
 ds_interp = ds_interp.load()
 ds_interp_u = ds_interp_u.load()
 ds_interp_v = ds_interp_v.load()
@@ -455,7 +455,7 @@ top_dict = {"U": (ds_interp_u, u_top, z),
             "pt": (ds_interp, pt_top, z),
             "QVAPOR": (ds_interp, qv_top, z),
             "W": (ds_interp, w_top, zw)}
-
+print("Processing top boundary conditions...pool")
 with Pool(max_pool) as p:
         pool_outputs = list(
             tqdm(

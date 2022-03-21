@@ -1,5 +1,5 @@
 [case]
-case_name = "wrf4palm_test", 
+case_name = "wrf4palm_test",
 max_pool = 4,
 
 [domain]
