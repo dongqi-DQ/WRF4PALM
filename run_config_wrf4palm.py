@@ -341,11 +341,11 @@ print("ds_we1")
 ds_we = ds_interp.isel(west_east=[0,-1])
 ds_sn = ds_interp.isel(south_north=[0,-1])
 
-print("ds_we_unstag1")
+print("ds_we_ustag1")
 ds_we_ustag = ds_interp_u.isel(west_east=[0,-1])
 ds_we_vstag = ds_interp_v.isel(west_east=[0,-1])
 
-print("ds_sn_unstag1")
+print("ds_sn_ustag1")
 ds_sn_ustag = ds_interp_u.isel(south_north=[0,-1])
 ds_sn_vstag = ds_interp_v.isel(south_north=[0,-1])
 
@@ -369,10 +369,12 @@ ds_sn = ds_sn.load()
 
 print("load ds_we_ustag")
 ds_we_ustag = ds_we_ustag.load()
+print("load ds_sn_ustag")
 ds_sn_ustag = ds_sn_ustag.load()
 
 print("load ds_we_vstag")
 ds_we_vstag = ds_we_vstag.load()
+print("load ds_sn_vstag")
 ds_sn_vstag = ds_sn_vstag.load()
 
 print("ds_palm_we")
@@ -445,8 +447,11 @@ for var in ds_interp.data_vars:
     if var not in ["V", "Z"]:
         ds_interp_v = ds_interp_v.drop(var)
 print("Processing top boundary conditions...load")
+print("Processing top boundary conditions...load.ds_interp")
 ds_interp = ds_interp.load()
+print("Processing top boundary conditions...load.ds_interp_u")
 ds_interp_u = ds_interp_u.load()
+print("Processing top boundary conditions...load.ds_interp_v")
 ds_interp_v = ds_interp_v.load()
 
 
@@ -479,6 +484,7 @@ lat_geostr = ds_drop.lat[:,0]
 dx_wrf = ds_drop.DX
 dy_wrf = ds_drop.DY
 gph = ds_drop.gph
+print("Geostrophic wind estimation...gph.load()")
 gph = gph.load()
 ds_geostr = xr.Dataset()
 ds_geostr = ds_geostr.assign_coords({"time":ds_drop.time.data,
