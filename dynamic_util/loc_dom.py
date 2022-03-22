@@ -14,6 +14,7 @@ from pyproj import Proj,  Transformer, CRS
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
 from math import ceil, floor
+import numpy as np
 
 def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
     '''
