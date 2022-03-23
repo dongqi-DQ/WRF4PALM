@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------
-# WRF4PALM 
+# WRF4PALM
 #--------------------------------------------------------------------------------
-# Process data from WRF to PALM v6.0     
-# Output of this script is the NetCDF dynamic driver for PALM following          
+# Process data from WRF to PALM v6.0
+# Output of this script is the NetCDF dynamic driver for PALM following
 # PALM Input Data Standard (PIDS) v1.9
 # [Update v1.1]- Oct 2021
 # - use salem, xarray and multiprocessing
 # - update namelist variables
 # - add WRF projection configuration
 # - modify geostrophic wind calculation
-# 
+#
 # [Update v1.0.1] - 7 Jan 2021
 # User input should be provided in namelist.dynamic
-#                                                                              
-# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)                          
-# Acknowledgement: The author would like to acknowledge Ricardo Faria for his     
-# initial contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.   
+#
+# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+# Acknowledgement: The author would like to acknowledge Ricardo Faria for his
+# initial contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.
 #--------------------------------------------------------------------------------
-import sys 
+import sys
 import time
 import salem
 import xarray as xr
@@ -50,7 +50,7 @@ start = datetime.now()
 #--------------------------------------------------------------------------------
 settings_cfg = configparser.ConfigParser(inline_comment_prefixes='#')
 config = configparser.RawConfigParser()
-config.read(sys.argv[1])#"namelist.test")     
+config.read(sys.argv[1])#"namelist.test")
 case_name =  ast.literal_eval(config.get("case", "case_name"))[0]
 max_pool =  ast.literal_eval(config.get("case", "max_pool"))[0]
 
@@ -84,9 +84,9 @@ dz_stretch_level = ast.literal_eval(config.get("stretch", "dz_stretch_level"))[0
 
 ## allowed maximum vertical grid spacing (in m)
 dz_max = ast.literal_eval(config.get("stretch", "dz_max"))[0]
-                   
+
 if dz_stretch_factor>1.0:
-    z, zw = calc_stretch(z, dz)
+    z, zw = calc_stretch(z, dz, zw, dz_stretch_level)
 
 dz_soil = np.array(ast.literal_eval(config.get("soil", "dz_soil")))
 msoil_val = np.array(ast.literal_eval(config.get("soil", "msoil")))[0]
@@ -112,7 +112,7 @@ dynamic_ts = ast.literal_eval(config.get("wrf", "dynamic_ts"))[0]
 #-------------------------------------------------------------------------------
 # Read WRF
 #-------------------------------------------------------------------------------
-## the input can be one wrf file, a list of files, 
+## the input can be one wrf file, a list of files,
 # or a string glob in the form "path/to/my/files/*.nc"
 print("Reading WRF")
 if len(wrf_file) == 1:
@@ -120,7 +120,7 @@ if len(wrf_file) == 1:
 else:
     wrf_files = sorted([wrf_path+file for file in wrf_file ])
 
-## use salem to read WRF 
+## use salem to read WRF
 # remove duplicated timestamps
 ds_wrf = xr.Dataset()
 with salem.open_mf_wrf_dataset(wrf_files) as ds_raw:
@@ -150,16 +150,16 @@ if dynamic_ts<wrf_ts:
     "Invalid timesteps given. Stopping..."
     )
 
-    
+
 ## find how many timestamps to interpolate
 num_ts = (dt_end - dt_start)/timedelta(seconds=dynamic_ts)
 ## generate a list of timestamps
 all_ts = [dt_start+i*timedelta(seconds=dynamic_ts) for i in range(0,floor(num_ts)+1)]
-## round up the end time index so that PALM doesn't crash 
+## round up the end time index so that PALM doesn't crash
 # when data of the final timestamp is not given
 if floor(num_ts) != ceil(num_ts):
     all_ts.append(dt_end)
-    
+
 all_ts = np.array(all_ts).astype("datetime64[ns]")
 ## select required timestamps
 ds_wrf = ds_wrf.sel(time=all_ts)
@@ -194,8 +194,8 @@ if map_proj == 6:
     yy_wrf = ds_wrf.lat.data
 else:
     wrf_proj = Proj(proj=wrf_map_dict[map_proj], # projection type
-                    lat_1=ds_wrf.TRUELAT1, lat_2=ds_wrf.TRUELAT2, 
-                    lat_0=ds_wrf.MOAD_CEN_LAT, lon_0=ds_wrf.STAND_LON, 
+                    lat_1=ds_wrf.TRUELAT1, lat_2=ds_wrf.TRUELAT2,
+                    lat_0=ds_wrf.MOAD_CEN_LAT, lon_0=ds_wrf.STAND_LON,
                     a=6370000, b=6370000) # The Earth is a perfect sphere in WRF
 
     # Easting and Northings of the domains center point
@@ -210,8 +210,8 @@ else:
     # 2d grid
     xx_wrf, yy_wrf = np.meshgrid(np.arange(nx_wrf) * dx_wrf + x0_wrf,
                                  np.arange(ny_wrf) * dy_wrf + y0_wrf)
-    
-## if no PALM projection is given by user, 
+
+## if no PALM projection is given by user,
 #  then use WGS84 lat/lon and WRF projection to locate domain
 # otherwise use the user specified projection
 if len(palm_proj_code) == 0:
@@ -222,18 +222,18 @@ else:
 trans_wrf2palm = Transformer.from_proj(wrf_proj, palm_proj)
 lons_wrf,lats_wrf = trans_wrf2palm.transform(xx_wrf, yy_wrf)
 
-west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon, 
+west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon,
                                            dx, dy, nx, ny)
 
 ## write a cfg file for future reference
-generate_cfg(case_name, dx, dy, dz, nx, ny, nz, 
+generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
 south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
-west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]  
+west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]
 # in case negative longitudes are used
-# these two lines may be redundant need further tests 27 Oct 2021 
+# these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:
     east_idx, west_idx = west_idx, east_idx
 
@@ -246,10 +246,10 @@ if north_idx-south_idx<1 or east_idx-west_idx<1:
     "Stopping...\n"
     )
 
-## drop data outside of PALM domain area    
+## drop data outside of PALM domain area
 mask_sn = (ds_wrf.south_north>=ds_wrf.south_north[south_idx]) & (ds_wrf.south_north<=ds_wrf.south_north[north_idx])
 mask_we = (ds_wrf.west_east>=ds_wrf.west_east[west_idx]) & (ds_wrf.west_east<=ds_wrf.west_east[east_idx])
-    
+
 ds_drop = ds_wrf.where(mask_sn & mask_we, drop=True)
 ds_drop["pt"] = ds_drop["T"] + 300
 ds_drop["pt"].attrs = ds_drop["T"].attrs
@@ -309,7 +309,7 @@ surface_var_dict = {"U": u10_wrf,
 
 #-------------------------------------------------------------------------------
 # soil moisture and temperature
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 print("Calculating soil temperature and moisture from WRF")
 
 watermask = ds_interp["LANDMASK"].sel(time=dt_start).load().data == 0
@@ -324,7 +324,7 @@ for izs in range(0,len(zs_wrf)):
     smois_wrf.isel(soil_layers=izs).data[watermask] = median_smois[izs]
     if smois_wrf.isel(soil_layers=izs).mean()== 0.0:
         smois_wrf.isel(soil_layers=izs).data[:,:] = msoil_val
-    
+
 init_tsoil = np.zeros((len(dz_soil), len(y), len(x)))
 init_msoil = np.zeros((len(dz_soil), len(y), len(x)))
 for iy in tqdm(range(0,len(y)),position=0, leave=True):
@@ -337,16 +337,20 @@ for iy in tqdm(range(0,len(y)),position=0, leave=True):
 #-------------------------------------------------------------------------------
 print("Start vertical interpolation")
 # create an empty dataset to store interpolated data
+print("ds_we1")
 ds_we = ds_interp.isel(west_east=[0,-1])
 ds_sn = ds_interp.isel(south_north=[0,-1])
 
+print("ds_we_unstag1")
 ds_we_ustag = ds_interp_u.isel(west_east=[0,-1])
 ds_we_vstag = ds_interp_v.isel(west_east=[0,-1])
 
+print("ds_sn_unstag1")
 ds_sn_ustag = ds_interp_u.isel(south_north=[0,-1])
 ds_sn_vstag = ds_interp_v.isel(south_north=[0,-1])
 
 varbc_list = ["W", "QVAPOR","pt","Z"]
+print("loop")
 for var in ds_we.data_vars:
     if var not in varbc_list:
         ds_we = ds_we.drop(var)
@@ -357,26 +361,31 @@ for var in ds_we.data_vars:
     if var not in ["V", "Z"]:
         ds_we_vstag = ds_we_vstag.drop(var)
         ds_sn_vstag = ds_sn_vstag.drop(var)
-        
+
+print("load ds_we")
 ds_we = ds_we.load()
+print("load ds_sn")
 ds_sn = ds_sn.load()
 
+print("load ds_we_unstag")
 ds_we_ustag = ds_we_ustag.load()
 ds_sn_ustag = ds_sn_ustag.load()
 
+print("load ds_we_vstag")
 ds_we_vstag = ds_we_vstag.load()
 ds_sn_vstag = ds_sn_vstag.load()
 
+print("ds_palm_we")
 ds_palm_we = xr.Dataset()
-ds_palm_we = ds_palm_we.assign_coords({"x": x[:2],"y": y, "time":ds_interp.time.data, 
+ds_palm_we = ds_palm_we.assign_coords({"x": x[:2],"y": y, "time":ds_interp.time.data,
                                        "z": z, "yv": yv, "xu": xu[:2], "zw":zw})
-
+print("ds_palm_sn")
 ds_palm_sn = xr.Dataset()
-ds_palm_sn = ds_palm_sn.assign_coords({"x": x,"y": y[:2], "time":ds_interp.time.data, 
+ds_palm_sn = ds_palm_sn.assign_coords({"x": x,"y": y[:2], "time":ds_interp.time.data,
                                        "z": z, "yv": yv[:2], "xu": xu, "zw":zw})
-
-zeros_we = np.zeros((len(all_ts), len(z), len(y), len(x[:2]))) 
-zeros_sn = np.zeros((len(all_ts), len(z), len(y[:2]), len(x))) 
+print("zeros_we")
+zeros_we = np.zeros((len(all_ts), len(z), len(y), len(x[:2])))
+zeros_sn = np.zeros((len(all_ts), len(z), len(y[:2]), len(x)))
 
 # interpolation scalars
 for varbc in ["QVAPOR","pt"]:
@@ -386,10 +395,10 @@ for varbc in ["QVAPOR","pt"]:
     ds_palm_we[varbc] = multi_zinterp(max_pool, ds_we, varbc, z, ds_palm_we)
     print(f"Processing {varbc} for south and north boundaries")
     ds_palm_sn[varbc] = multi_zinterp(max_pool, ds_sn, varbc, z, ds_palm_sn)
-    
+
 # interpolate w
-zeros_we_w = np.zeros((len(all_ts), len(zw), len(y), len(x[:2]))) 
-zeros_sn_w = np.zeros((len(all_ts), len(zw), len(y[:2]), len(x))) 
+zeros_we_w = np.zeros((len(all_ts), len(zw), len(y), len(x[:2])))
+zeros_sn_w = np.zeros((len(all_ts), len(zw), len(y[:2]), len(x)))
 ds_palm_we["W"] = xr.DataArray(np.copy(zeros_we_w), dims=['time','zw','y', 'x'])
 ds_palm_sn["W"] = xr.DataArray(np.copy(zeros_sn_w), dims=['time','zw','y', 'x'])
 
@@ -399,8 +408,8 @@ print(f"Processing W for south and north boundaries")
 ds_palm_sn["W"] = multi_zinterp(max_pool, ds_sn, "W", zw, ds_palm_sn)
 
 # interpolate u and v
-zeros_we_u = np.zeros((len(all_ts), len(z), len(y), len(xu[:2]))) 
-zeros_sn_u = np.zeros((len(all_ts), len(z), len(y[:2]), len(xu))) 
+zeros_we_u = np.zeros((len(all_ts), len(z), len(y), len(xu[:2])))
+zeros_sn_u = np.zeros((len(all_ts), len(z), len(y[:2]), len(xu)))
 ds_palm_we["U"] = xr.DataArray(np.copy(zeros_we_u), dims=['time','z','y', 'xu'])
 print(f"Processing U for west and east boundaries")
 ds_palm_we["U"] = multi_zinterp(max_pool, ds_we_ustag, "U", z, ds_palm_we)
@@ -409,8 +418,8 @@ ds_palm_sn["U"] = xr.DataArray(np.copy(zeros_sn_u), dims=['time','z','y', 'xu'])
 print(f"Processing U for south and north boundaries")
 ds_palm_sn["U"] = multi_zinterp(max_pool, ds_sn_ustag, "U", z, ds_palm_sn)
 
-zeros_we_v = np.zeros((len(all_ts), len(z), len(yv), len(x[:2]))) 
-zeros_sn_v = np.zeros((len(all_ts), len(z), len(yv[:2]), len(x))) 
+zeros_we_v = np.zeros((len(all_ts), len(z), len(yv), len(x[:2])))
+zeros_sn_v = np.zeros((len(all_ts), len(z), len(yv[:2]), len(x)))
 ds_palm_we["V"] = xr.DataArray(np.copy(zeros_we_v), dims=['time','z','yv', 'x'])
 print(f"Processing V for west and east boundaries")
 ds_palm_we["V"] = multi_zinterp(max_pool, ds_we_vstag, "V", z, ds_palm_we)
@@ -440,7 +449,7 @@ ds_interp = ds_interp.load()
 ds_interp_u = ds_interp_u.load()
 ds_interp_v = ds_interp_v.load()
 
-        
+
 top_dict = {"U": (ds_interp_u, u_top, z),
             "V": (ds_interp_v, v_top, z),
             "pt": (ds_interp, pt_top, z),
@@ -472,7 +481,7 @@ dy_wrf = ds_drop.DY
 gph = ds_drop.gph
 gph = gph.load()
 ds_geostr = xr.Dataset()
-ds_geostr = ds_geostr.assign_coords({"time":ds_drop.time.data, 
+ds_geostr = ds_geostr.assign_coords({"time":ds_drop.time.data,
                                      "z": ds_drop["Z"].mean(("time", "south_north", "west_east")).data})
 ds_geostr["ug"] = xr.DataArray(np.zeros((len(all_ts),len(gph.bottom_top.data))),
                                dims=['time','z'])
@@ -486,18 +495,18 @@ for ts in tqdm(range(0,len(all_ts)), total=len(all_ts), position=0, leave=True):
 
 
 # interpolate to PALM vertical levels
-ds_geostr = ds_geostr.interp({"z": z}) 
-        
-        
+ds_geostr = ds_geostr.interp({"z": z})
+
+
 #-------------------------------------------------------------------------------
 # surface NaNs
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 print("Resolving surface NaNs...")
 # apply multiprocessing
 with Pool(max_pool) as p:
     pool_outputs = list(
         tqdm(
-            p.imap(partial(solve_surface,all_ts, ds_palm_we, ds_palm_sn, surface_var_dict),surface_var_dict.keys()), 
+            p.imap(partial(solve_surface,all_ts, ds_palm_we, ds_palm_sn, surface_var_dict),surface_var_dict.keys()),
             total=len(surface_var_dict.keys()),position=0, leave=True
         )
     )
@@ -509,11 +518,11 @@ for var in surface_var_dict.keys():
 # near surface geostrophic wind
 for t in range(0,len(all_ts)):
     ds_geostr["ug"][t,:] =  surface_nan_w(ds_geostr["ug"][t,:].data)
-    ds_geostr["vg"][t,:] =  surface_nan_w(ds_geostr["vg"][t,:].data) 
+    ds_geostr["vg"][t,:] =  surface_nan_w(ds_geostr["vg"][t,:].data)
 
 #-------------------------------------------------------------------------------
 # calculate initial profiles
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 ds_drop["bottom_top"] = ds_drop["Z"].mean(("time", "south_north", "west_east")).data
 
 u_init = ds_drop["U"].sel(time=dt_start).mean(
@@ -522,7 +531,7 @@ u_init = ds_drop["U"].sel(time=dt_start).mean(
 v_init = ds_drop["V"].sel(time=dt_start).mean(
     dim=["south_north", "west_east"]).interp(
     {"bottom_top": z}, method = interp_mode)
-# stagger w 
+# stagger w
 w_init = ds_drop["W"].sel(time=dt_start).mean(
     dim=["south_north", "west_east"]).interp(
     {"bottom_top": zw}, method = interp_mode)
@@ -549,7 +558,7 @@ surface_pres = psfc_wrf[:, :,:].mean(dim=["south_north", "west_east"]).load()
 
 #-------------------------------------------------------------------------------
 # soil moisture and temperature
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 nc_output_name = f'dynamic_files/{case_name}_dynamic_{start_year}_{start_month}_{start_day}_{start_hour}'
 print('Writing NetCDF file',flush=True)
 nc_output = xr.Dataset()
@@ -579,10 +588,10 @@ nc_output['time'] = xr.DataArray(times_sec, dims=['time'], attrs={'units':'secon
 
 
 nc_output.to_netcdf(nc_output_name)
-nc_output['init_soil_m'] = xr.DataArray(init_msoil, dims=['zsoil','y','x'], 
-         attrs={'units':'m^3/m^3','lod':np.int32(2), 'source':'WRF', 'long_name':'volumetric soil moisture (m^3/m^3)'}) 
-nc_output['init_soil_t'] = xr.DataArray(init_tsoil, dims=['zsoil','y','x'], 
-         attrs={'units':'K', 'lod':np.int32(2), 'source':'WRF', 'long_name':'soil temperature (K)'}) 
+nc_output['init_soil_m'] = xr.DataArray(init_msoil, dims=['zsoil','y','x'],
+         attrs={'units':'m^3/m^3','lod':np.int32(2), 'source':'WRF', 'long_name':'volumetric soil moisture (m^3/m^3)'})
+nc_output['init_soil_t'] = xr.DataArray(init_tsoil, dims=['zsoil','y','x'],
+         attrs={'units':'K', 'lod':np.int32(2), 'source':'WRF', 'long_name':'soil temperature (K)'})
 
 # output boundary conditions to PALM input
 # directions: 0 west, 1 east
@@ -670,15 +679,15 @@ for var in nc_output.data_vars:
     nc_output[var].to_netcdf(nc_output_name, encoding=encoding, mode='a')
 
 
-print('Add to your *_p3d file: ' + '\n soil_temperature = ' + 
+print('Add to your *_p3d file: ' + '\n soil_temperature = ' +
               str([value for value in init_tsoil.mean(axis=(1,2))]) +
-      '\n soil_moisture = ' + str([value for value in init_msoil.mean(axis=(1,2))]) 
+      '\n soil_moisture = ' + str([value for value in init_msoil.mean(axis=(1,2))])
         + '\n deep_soil_temperature = ' + str(deep_tsoil)+'\n')
 
 with open('cfg_files/'+ case_name + '.cfg', "a") as cfg:
-    cfg.write('Add to your *_p3d file: ' + '\n soil_temperature = ' + 
+    cfg.write('Add to your *_p3d file: ' + '\n soil_temperature = ' +
               str([value for value in init_tsoil.mean(axis=(1,2))]) +
-      '\n soil_moisture = ' + str([value for value in init_msoil.mean(axis=(1,2))]) 
+      '\n soil_moisture = ' + str([value for value in init_msoil.mean(axis=(1,2))])
         + '\n deep_soil_temperature = ' + str(deep_tsoil)+'\n')
 
 

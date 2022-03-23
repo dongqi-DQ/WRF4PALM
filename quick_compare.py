@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------
-# WRF4PALM quick compare 
+# WRF4PALM quick compare
 #--------------------------------------------------------------------------------
 # quickly compare WRF output with the dynamic driver
 # this script offers 3 types of comparison
 # - zcross: vertical cross sections at west/east/south/north boundaries of PALM domain
 #           for the given variable and timestamp
-# - pr: vertical profiles (horizontal mean is taken) at west/east/south/north 
+# - pr: vertical profiles (horizontal mean is taken) at west/east/south/north
 #       boundaries of PALM domain for the given variable and timestamp
 # - ts: time series horizontal mean is taken) at west/east/south/north
 #       boundaries of PALM domain for the given variable and altitude
@@ -15,10 +15,10 @@
 # 1. python quick_compare.py namelist.wrf4palm [plot type] variable
 # 2. the script will ask for the required timestamp or altitude depending on the plot type
 #
-# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)                          
+# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
 #--------------------------------------------------------------------------------
 
-import sys 
+import sys
 import time
 import salem
 import xarray as xr
@@ -96,7 +96,7 @@ dz_stretch_level = ast.literal_eval(config.get("stretch", "dz_stretch_level"))[0
 dz_max = ast.literal_eval(config.get("stretch", "dz_max"))[0]
 
 if dz_stretch_factor>1.0:
-    z, zw = calc_stretch(z, dz)
+    z, zw = calc_stretch(z, dz, zw, dz_stretch_level)
 
 dz_soil = np.array(ast.literal_eval(config.get("soil", "dz_soil")))
 
@@ -196,8 +196,8 @@ if map_proj == 6:
     yy_wrf = ds_wrf.lat.data
 else:
     wrf_proj = Proj(proj=wrf_map_dict[map_proj], # projection type
-                    lat_1=ds_wrf.TRUELAT1, lat_2=ds_wrf.TRUELAT2, 
-                    lat_0=ds_wrf.MOAD_CEN_LAT, lon_0=ds_wrf.STAND_LON, 
+                    lat_1=ds_wrf.TRUELAT1, lat_2=ds_wrf.TRUELAT2,
+                    lat_0=ds_wrf.MOAD_CEN_LAT, lon_0=ds_wrf.STAND_LON,
                     a=6370000, b=6370000) # The Earth is a perfect sphere in WRF
 
     # Easting and Northings of the domains center point
@@ -212,8 +212,8 @@ else:
     # 2d grid
     xx_wrf, yy_wrf = np.meshgrid(np.arange(nx_wrf) * dx_wrf + x0_wrf,
                                  np.arange(ny_wrf) * dy_wrf + y0_wrf)
-    
-## if no PALM projection is given by user, 
+
+## if no PALM projection is given by user,
 #  then use WGS84 lat/lon and WRF projection to locate domain
 # otherwise use the user specified projection
 if len(palm_proj_code) == 0:
@@ -224,18 +224,18 @@ else:
 trans_wrf2palm = Transformer.from_proj(wrf_proj, palm_proj)
 lons_wrf,lats_wrf = trans_wrf2palm.transform(xx_wrf, yy_wrf)
 
-west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon, 
+west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon,
                                            dx, dy, nx, ny)
 
 ## write a cfg file for future reference
-generate_cfg(case_name, dx, dy, dz, nx, ny, nz, 
+generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
 south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
-west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]  
+west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]
 # in case negative longitudes are used
-# these two lines may be redundant need further tests 27 Oct 2021 
+# these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:
     east_idx, west_idx = west_idx, east_idx
 
@@ -247,10 +247,10 @@ if north_idx-south_idx<1 or east_idx-west_idx<1:
     "Please consider re-configure your PALM domain.\n"+
     "Stopping...\n"
     )
-## drop data outside of PALM domain area    
+## drop data outside of PALM domain area
 mask_sn = (ds_wrf.south_north>=ds_wrf.south_north[south_idx]) & (ds_wrf.south_north<=ds_wrf.south_north[north_idx])
 mask_we = (ds_wrf.west_east>=ds_wrf.west_east[west_idx]) & (ds_wrf.west_east<=ds_wrf.west_east[east_idx])
-    
+
 ds_drop = ds_wrf.where(mask_sn & mask_we, drop=True)
 
 #-------------------------------------------------------------------------------
@@ -317,7 +317,7 @@ def pr(ds_drop, ds_dynamic, var, ts=0):
     # plot vertical profiles
     if type(ts) is str:
         ts = np.argwhere(pd.to_datetime(all_ts)==pd.to_datetime(ts))[0,0]
-    
+
     plt.figure(figsize = (16, 9))
     palm_var = var.lower()
     wrf_var = var.upper()
@@ -340,7 +340,7 @@ def pr(ds_drop, ds_dynamic, var, ts=0):
         plt.subplot(1,4, i+1)
         palm_ds = ds_dynamic[varplot].isel(time=ts).mean(axis=1)
         ds = wrf_ds_list[i]
-        plt.plot(ds.mean(axis=1), ds_drop.Z.mean(dim=["time", "south_north", "west_east"]), 
+        plt.plot(ds.mean(axis=1), ds_drop.Z.mean(dim=["time", "south_north", "west_east"]),
                  'x-', label="WRF")
         if palm_var == "w":
             plt.plot(palm_ds, ds_dynamic.zw,"--", label ="PALM")
@@ -365,7 +365,7 @@ def ts(ds_drop, ds_dynamic, var, level=0):
     if wrf_var=="QV":
         wrf_var = "QVAPOR"
 
-    palm_bc_list = ["ls_forcing_left_", "ls_forcing_right_", 
+    palm_bc_list = ["ls_forcing_left_", "ls_forcing_right_",
                     "ls_forcing_south_", "ls_forcing_north_", "ls_forcing_top_"]
     palm_var_list = [ls_str+palm_var for ls_str in palm_bc_list]
 
@@ -399,7 +399,7 @@ def ts(ds_drop, ds_dynamic, var, level=0):
         plt.subplot(5,1, i+1)
         plt.plot(ds_drop.time, wrf_ds_plot, 'x-', label="WRF")
         plt.plot(ds_drop.time, palm_ds, "--", label="PALM")
-        plt.title(plt_title) 
+        plt.title(plt_title)
         plt.xlabel("time")
         plt.legend()
         plt.grid(alpha=0.7)
