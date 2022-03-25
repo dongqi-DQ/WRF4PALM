@@ -33,7 +33,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 from functools import partial
 from multiprocess import Pool
-from dynamic_util.nearest import nearest_2d, nearest_1d
+from dynamic_util.nearest import framing_2d_cartesian, nearest_1d
 from dynamic_util.loc_dom import calc_stretch, domain_location, generate_cfg
 from dynamic_util.process_wrf import zinterp, multi_zinterp, process_top
 from dynamic_util.geostrophic import calc_geostrophic_wind
@@ -224,7 +224,7 @@ else:
 trans_wrf2palm = Transformer.from_proj(wrf_proj, palm_proj)
 lons_wrf,lats_wrf = trans_wrf2palm.transform(xx_wrf, yy_wrf)
 
-west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon,
+west, east, south, north, centx, centy = domain_location(palm_proj, wgs_proj, centlat, centlon,
                                            dx, dy, nx, ny)
 
 ## write a cfg file for future reference
@@ -232,8 +232,7 @@ generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
-south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
-west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]
+west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north)
 # in case negative longitudes are used
 # these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:

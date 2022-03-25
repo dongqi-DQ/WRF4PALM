@@ -53,7 +53,7 @@ def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
         west, east   = centx-nx*dx/2, centx+nx*dx/2
         north, south = centy+ny*dy/2, centy-ny*dy/2
 
-    return west, east, south, north
+    return west, east, south, north, centx, centy
 
 
 def generate_cfg(case_name, dx, dy, dz, nx, ny, nz, west, east, south, north, centlat, centlon, z_origin):

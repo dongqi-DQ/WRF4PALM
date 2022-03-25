@@ -34,7 +34,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 from functools import partial
 from multiprocess import Pool
-from dynamic_util.nearest import nearest_2d
+from dynamic_util.nearest import framing_2d_cartesian
 from dynamic_util.loc_dom import calc_stretch, domain_location, generate_cfg
 from dynamic_util.process_wrf import zinterp, multi_zinterp, process_top
 from dynamic_util.geostrophic import calc_geostrophic_wind
@@ -222,7 +222,7 @@ else:
 trans_wrf2palm = Transformer.from_proj(wrf_proj, palm_proj)
 lons_wrf,lats_wrf = trans_wrf2palm.transform(xx_wrf, yy_wrf)
 
-west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon,
+west, east, south, north, centx, centy = domain_location(palm_proj, wgs_proj, centlat, centlon,
                                            dx, dy, nx, ny)
 
 ## write a cfg file for future reference
@@ -230,8 +230,7 @@ generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
-south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
-west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]
+west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north)
 # in case negative longitudes are used
 # these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:
@@ -262,11 +261,11 @@ ds_drop["gph"].attrs = ds_drop["PH"].attrs
 #-------------------------------------------------------------------------------
 print("Start horizontal interpolation")
 # assign new coordinates based on PALM
-south_north_palm = ds_drop.south_north[0].data+y
-west_east_palm = ds_drop.west_east[0].data+x
+south_north_palm = centy-0.5*(north-south)+y
+west_east_palm   = centx-0.5*(east-west)+x
 # staggered coordinates
-south_north_v_palm = ds_drop.south_north[0].data+yv
-west_east_u_palm = ds_drop.west_east[0].data+xu
+south_north_v_palm = centy-0.5*(north-south)+yv
+west_east_u_palm   = centx-0.5*(east-west)+xu
 
 # interpolation
 ds_drop = ds_drop.assign_coords({"west_east_palm": west_east_palm,
@@ -337,15 +336,15 @@ for iy in tqdm(range(0,len(y)),position=0, leave=True):
 #-------------------------------------------------------------------------------
 print("Start vertical interpolation")
 # create an empty dataset to store interpolated data
-print("ds_we1")
+print("ds_we")
 ds_we = ds_interp.isel(west_east=[0,-1])
 ds_sn = ds_interp.isel(south_north=[0,-1])
 
-print("ds_we_ustag1")
+print("ds_we_ustag")
 ds_we_ustag = ds_interp_u.isel(west_east=[0,-1])
 ds_we_vstag = ds_interp_v.isel(west_east=[0,-1])
 
-print("ds_sn_ustag1")
+print("ds_sn_ustag")
 ds_sn_ustag = ds_interp_u.isel(south_north=[0,-1])
 ds_sn_vstag = ds_interp_v.isel(south_north=[0,-1])
 
