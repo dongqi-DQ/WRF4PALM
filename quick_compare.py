@@ -255,7 +255,8 @@ ds_drop = ds_wrf.where(mask_sn & mask_we, drop=True)
 #-------------------------------------------------------------------------------
 # Read dynamic driver
 #-------------------------------------------------------------------------------
-ds_dynamic = xr.open_dataset(f'dynamic_files/{case_name}_dynamic_{start_year}_{start_month}_{start_day}_{start_hour}')
+dynstr = f'dynamic_files/{case_name}_dynamic_{start_year}_{start_month}_{start_day}_{start_hour}'
+ds_dynamic = xr.open_dataset(dynstr)
 #-------------------------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------------------------
