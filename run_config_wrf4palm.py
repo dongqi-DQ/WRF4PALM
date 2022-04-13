@@ -34,7 +34,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 from functools import partial
 from multiprocess import Pool
-from dynamic_util.nearest import nearest_2d
+from dynamic_util.nearest import framing_2d_cartesian
 from dynamic_util.loc_dom import calc_stretch, domain_location, generate_cfg
 from dynamic_util.process_wrf import zinterp, multi_zinterp, process_top
 from dynamic_util.geostrophic import calc_geostrophic_wind
@@ -52,7 +52,7 @@ settings_cfg = configparser.ConfigParser(inline_comment_prefixes='#')
 config = configparser.RawConfigParser()
 config.read(sys.argv[1])#"namelist.test")
 case_name =  ast.literal_eval(config.get("case", "case_name"))[0]
-max_pool =  ast.literal_eval(config.get("case", "max_pool"))[0]
+max_pool  =  ast.literal_eval(config.get("case", "max_pool" ))[0]
 
 palm_proj_code = ast.literal_eval(config.get("domain", "palm_proj"))[0]
 centlat = ast.literal_eval(config.get("domain", "centlat"))[0]
@@ -222,7 +222,7 @@ else:
 trans_wrf2palm = Transformer.from_proj(wrf_proj, palm_proj)
 lons_wrf,lats_wrf = trans_wrf2palm.transform(xx_wrf, yy_wrf)
 
-west, east, south, north = domain_location(palm_proj, wgs_proj, centlat, centlon,
+west, east, south, north, centx, centy = domain_location(palm_proj, wgs_proj, centlat, centlon,
                                            dx, dy, nx, ny)
 
 ## write a cfg file for future reference
@@ -230,8 +230,7 @@ generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
-south_idx, north_idx = nearest_2d(lats_wrf, south)[1][0], nearest_2d(lats_wrf, north)[1][0]
-west_idx, east_idx = nearest_2d(lons_wrf, west)[1][1], nearest_2d(lons_wrf, east)[1][1]
+west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north)
 # in case negative longitudes are used
 # these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:
@@ -262,11 +261,11 @@ ds_drop["gph"].attrs = ds_drop["PH"].attrs
 #-------------------------------------------------------------------------------
 print("Start horizontal interpolation")
 # assign new coordinates based on PALM
-south_north_palm = ds_drop.south_north[0].data+y
-west_east_palm = ds_drop.west_east[0].data+x
+south_north_palm = centy-0.5*(north-south)+y
+west_east_palm   = centx-0.5*(east-west)+x
 # staggered coordinates
-south_north_v_palm = ds_drop.south_north[0].data+yv
-west_east_u_palm = ds_drop.west_east[0].data+xu
+south_north_v_palm = centy-0.5*(north-south)+yv
+west_east_u_palm   = centx-0.5*(east-west)+xu
 
 # interpolation
 ds_drop = ds_drop.assign_coords({"west_east_palm": west_east_palm,
@@ -337,15 +336,15 @@ for iy in tqdm(range(0,len(y)),position=0, leave=True):
 #-------------------------------------------------------------------------------
 print("Start vertical interpolation")
 # create an empty dataset to store interpolated data
-print("ds_we1")
+print("ds_we")
 ds_we = ds_interp.isel(west_east=[0,-1])
 ds_sn = ds_interp.isel(south_north=[0,-1])
 
-print("ds_we_unstag1")
+print("ds_we_ustag")
 ds_we_ustag = ds_interp_u.isel(west_east=[0,-1])
 ds_we_vstag = ds_interp_v.isel(west_east=[0,-1])
 
-print("ds_sn_unstag1")
+print("ds_sn_ustag")
 ds_sn_ustag = ds_interp_u.isel(south_north=[0,-1])
 ds_sn_vstag = ds_interp_v.isel(south_north=[0,-1])
 
@@ -367,12 +366,14 @@ ds_we = ds_we.load()
 print("load ds_sn")
 ds_sn = ds_sn.load()
 
-print("load ds_we_unstag")
+print("load ds_we_ustag")
 ds_we_ustag = ds_we_ustag.load()
+print("load ds_sn_ustag")
 ds_sn_ustag = ds_sn_ustag.load()
 
 print("load ds_we_vstag")
 ds_we_vstag = ds_we_vstag.load()
+print("load ds_sn_vstag")
 ds_sn_vstag = ds_sn_vstag.load()
 
 print("ds_palm_we")
@@ -436,7 +437,7 @@ v_top = np.zeros((len(all_ts), len(yv), len(x)))
 w_top = np.zeros((len(all_ts), len(y), len(x)))
 qv_top = np.zeros((len(all_ts), len(y), len(x)))
 pt_top = np.zeros((len(all_ts), len(y), len(x)))
-
+print("Processing top boundary conditions...loop")
 for var in ds_interp.data_vars:
     if var not in varbc_list:
         ds_interp = ds_interp.drop(var)
@@ -444,9 +445,12 @@ for var in ds_interp.data_vars:
         ds_interp_u = ds_interp_u.drop(var)
     if var not in ["V", "Z"]:
         ds_interp_v = ds_interp_v.drop(var)
-
+print("Processing top boundary conditions...load")
+print("Processing top boundary conditions...load.ds_interp")
 ds_interp = ds_interp.load()
+print("Processing top boundary conditions...load.ds_interp_u")
 ds_interp_u = ds_interp_u.load()
+print("Processing top boundary conditions...load.ds_interp_v")
 ds_interp_v = ds_interp_v.load()
 
 
@@ -455,7 +459,7 @@ top_dict = {"U": (ds_interp_u, u_top, z),
             "pt": (ds_interp, pt_top, z),
             "QVAPOR": (ds_interp, qv_top, z),
             "W": (ds_interp, w_top, zw)}
-
+print("Processing top boundary conditions...pool")
 with Pool(max_pool) as p:
         pool_outputs = list(
             tqdm(
@@ -479,6 +483,7 @@ lat_geostr = ds_drop.lat[:,0]
 dx_wrf = ds_drop.DX
 dy_wrf = ds_drop.DY
 gph = ds_drop.gph
+print("Geostrophic wind estimation...gph.load()")
 gph = gph.load()
 ds_geostr = xr.Dataset()
 ds_geostr = ds_geostr.assign_coords({"time":ds_drop.time.data,
