@@ -10,14 +10,14 @@
 
 ## What's new in v1.1?
 - multiple WRF output files are allowed
-- move from wrf-python to salem to modify RAM usage and computation time 
+- move from wrf-python to salem to modify RAM usage and computation time
 - use xarray instead of netCDF4 package to modify RAM usage and computation time
-- apply multiprocessing to improve computation time 
+- apply multiprocessing to improve computation time
 - users now only need to edit namelist instead of editing the script  
-- add surface variables (e.g. U10, V10, T2, and Q2) for surface NaN solver 
-- read WRF projection info when locate PALM domain 
+- add surface variables (e.g. U10, V10, T2, and Q2) for surface NaN solver
+- read WRF projection info when locate PALM domain
 - allow users to specify the projection of PALM simulation
-- geostrophic winds are estimated using geopotential height instead of pressure 
+- geostrophic winds are estimated using geopotential height instead of pressure
 
 ## Instrustions
 **How to use WRF4PALM v1.1**
@@ -27,7 +27,7 @@
 4. [Run WRF4PALM](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1#one-line-command)
 
 
-### namelist 
+### namelist
 In v1.1, users don't have to edit the main script, and only need to edit the namelist file to provide their input (for examples please see `namelist.wrf4palm`).
 
 There are 5 sections in the namelist:
@@ -46,7 +46,7 @@ max_pool = 4,                # specify the maximum number of CPUs to use
 ```
 
 #### domain
-In the `domain` section, users need to provide PALM domain configuration (dx, dy, dz, nx, ny, nz, and z_origin), the latitude and longitude at PALM domain centre, and the projection of PALM domain. The projection of PALM domain and centre lat/lon are used to locate PALM domain in the WRF domain. The projection of PALM domain should be identical to the projection of PALM static driver, if the user has one. If users do not have the projection information, they can leave the field empty as `palm_proj = "",` such that WRF4PALM v1.1 will use the projetion of WRF directly. 
+In the `domain` section, users need to provide PALM domain configuration (dx, dy, dz, nx, ny, nz, and z_origin), the latitude and longitude at PALM domain centre, and the projection of PALM domain. The projection of PALM domain and centre lat/lon are used to locate PALM domain in the WRF domain. The projection of PALM domain should be identical to the projection of PALM static driver, if the user has one. If users do not have the projection information, they can leave the field empty as `palm_proj = "",` such that WRF4PALM v1.1 will use the projetion of WRF directly.
 
 ```
 [domain]
@@ -121,7 +121,7 @@ msoil = 0.3,         # dummy value in case soil moisture from WRF output is 0.0
 ### One line command
 Once the namelist is ready, users can run WRF4PALM using the one line command:
 ```
-python run_config_wrf4palm.py [your namelist] 
+python run_config_wrf4palm.py [your namelist]
 ```
 
 **Execution example**
@@ -184,7 +184,7 @@ In order for users to quickly check the quality of the dynamic driver generated 
 Three plot types are provided:
 1. **zcross**: vertical cross sections of west/east/south/north boundaries for the user specified variable and timestamp
 ```
-python quick_compare.py [your namelist] zcross [variable name] 
+python3 quick_compare.py [your namelist] zcross [variable name]
 ```
 then the script will ask for the timestamp:
 ```
@@ -194,7 +194,7 @@ Once the timestamp is given, the script will return a comparison plot.
 
 2. **pr**: vertical profiless of west/east/south/north boundaries for the user specified variable and timestamp
 ```
-python quick_compare.py [your namelist] pr [variable name] 
+python3 quick_compare.py [your namelist] pr [variable name]
 ```
 then the script will ask for the timestamp:
 ```
@@ -205,7 +205,7 @@ Note that the vertical profiles are horizontally averaged and hence the comparis
 
 2. **ts**: time series of west/east/south/north boundaries for the user specified variable and altitude
 ```
-python quick_compare.py [your namelist] ts [variable name] 
+python3 quick_compare.py [your namelist] ts [variable name]
 ```
 then the script will ask for the altitude:
 ```
@@ -216,19 +216,19 @@ Note that the time series are horizontally averaged and hence the comparison onl
 
 ## Remark
 - [`Surface_NaN_Solver.pdf`](https://github.com/dongqi-DQ/WRF4PALM/blob/v1.1/Surface_NaN_Solver.pdf) provides a short documentation explaining how the surface nans are resolved.
-- The WRF4PALM v1.1 python environemnt is available in [`wrf4palm_env.yml`](https://github.com/dongqi-DQ/WRF4PALM/blob/v1.1/wrf4palm_env.yml). 
+- The WRF4PALM v1.1 python environemnt is available in [`wrf4palm_env.yml`](https://github.com/dongqi-DQ/WRF4PALM/blob/v1.1/wrf4palm_env.yml).
 
 # Note  
-- We noticed that PALM uses a water temperature of 283 K as default, which may lead to a stable layer over water bodies (if there are any in the PALM simulation domain). We recommend users to modify the water temperatuer using the static driver. 
+- We noticed that PALM uses a water temperature of 283 K as default, which may lead to a stable layer over water bodies (if there are any in the PALM simulation domain). We recommend users to modify the water temperatuer using the static driver.
 - We may release a static driver generator using global data set from Google earth engine and SST from ERA5 (date TBC).
 - Geostrophic winds are only an estimation while the accuracy of the estimation still needs further discussion and investigation. This problem is the same in INIFOR.
 - We encourage WRF4PALM users to use the GitHub **Issue** system if they encountered any issues or problems using WRF4PALM such that communications and trouble shooting will be easier.
 
 --------------------------------------------------------------------------------------------
-### End of README 
+### End of README
 --------------------------------------------------------------------------------------------
 
-Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/WRF2PALM). 
+Development of WRF4PALM is based on WRF2PALM (https://github.com/ricardo88faria/WRF2PALM).
 
 A full documentation is still under construction, if you have any queries please contact the author or open a new issue.
 
@@ -237,6 +237,4 @@ A full documentation is still under construction, if you have any queries please
 
 **How to cite**
 
-Lin, D., Khan, B., Katurji, M., Bird, L., Faria, R., and Revell, L. E.: WRF4PALM v1.0: a mesoscale dynamical driver for the microscale PALM model system 6.0, Geosci. Model Dev., 14, 2503–2524, https://doi.org/10.5194/gmd-14-2503-2021, 2021. 
-
-
+Lin, D., Khan, B., Katurji, M., Bird, L., Faria, R., and Revell, L. E.: WRF4PALM v1.0: a mesoscale dynamical driver for the microscale PALM model system 6.0, Geosci. Model Dev., 14, 2503–2524, https://doi.org/10.5194/gmd-14-2503-2021, 2021.

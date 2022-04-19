@@ -36,7 +36,7 @@ def surface_nan_s(data,z,s2):
     return(data)
 def surface_nan_w(data):
     '''
-    do nothing for vertical wind 
+    do nothing for vertical wind
     '''
     nan_idx = np.argwhere(np.isnan(data))
     if nan_idx.size > 0 :
