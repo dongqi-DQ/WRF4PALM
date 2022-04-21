@@ -20,6 +20,7 @@
 # initial contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.
 #--------------------------------------------------------------------------------
 import sys
+import os
 import time
 import salem
 import xarray as xr
@@ -45,6 +46,14 @@ import warnings
 warnings.filterwarnings("ignore", '.*pyproj.*')
 
 start = datetime.now()
+
+if not os.path.exists("./cfg_files"):
+    print("cfg_files folder created")
+    os.makedirs("./cfg_files")
+if not os.path.exists("./dynamic_files"):    
+    print("dynamic_files folder created")
+    os.makedirs("./dynamic_files")
+
 #--------------------------------------------------------------------------------
 # Read user input namelist
 #--------------------------------------------------------------------------------
@@ -226,6 +235,7 @@ west, east, south, north, centx, centy = domain_location(palm_proj, wgs_proj, ce
                                            dx, dy, nx, ny)
 
 ## write a cfg file for future reference
+
 generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
