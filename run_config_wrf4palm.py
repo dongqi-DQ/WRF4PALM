@@ -261,11 +261,11 @@ ds_drop["gph"].attrs = ds_drop["PH"].attrs
 #-------------------------------------------------------------------------------
 print("Start horizontal interpolation")
 # assign new coordinates based on PALM
-south_north_palm = centy-0.5*(north-south)+y
-west_east_palm   = centx-0.5*(east-west)+x
+south_north_palm = ds_drop.south_north[0].data+y
+west_east_palm = ds_drop.west_east[0].data+x
 # staggered coordinates
-south_north_v_palm = centy-0.5*(north-south)+yv
-west_east_u_palm   = centx-0.5*(east-west)+xu
+south_north_v_palm = ds_drop.south_north[0].data+yv
+west_east_u_palm = ds_drop.west_east[0].data+xu
 
 # interpolation
 ds_drop = ds_drop.assign_coords({"west_east_palm": west_east_palm,
