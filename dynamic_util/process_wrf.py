@@ -26,10 +26,3 @@ def multi_zinterp(max_pool, ds_in, var, zcoord, ds_out):
     return ds_out[var]
 
 
-def process_top(all_ts,top_dict, var):
-    ds = top_dict[var][0]
-    top_arr = top_dict[var][1]
-    zcoord = top_dict[var][2]
-    for ts in range(0,len(all_ts)):
-        top_arr[ts,:,:] = ds.isel(time=ts).salem.wrf_zlevel(var, levels=zcoord[-1])
-    return var, top_arr
