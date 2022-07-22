@@ -10,25 +10,29 @@
 #--------------------------------------------------------------------------------#
 import numpy as np
 
-def framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north):
-    nearest_wix = np.argmin(np.abs(lons_wrf[0]-west))
-    if lons_wrf[0][nearest_wix]>west:
-        nearest_wix-=1
-    nearest_eix = np.argmin(np.abs(lons_wrf[0]-east))
-    if lons_wrf[0][nearest_eix]<east:
-        nearest_eix+=1
-
-    lats_wrf_y = np.array([x[0] for x in lats_wrf])
-
-    nearest_six = np.argmin(np.abs(lats_wrf_y-south))
-    if lats_wrf_y[nearest_six]>south:
-        nearest_six-=1
-    nearest_nix = np.argmin(np.abs(lats_wrf_y-north))
-    if lats_wrf_y[nearest_nix]<north:
-        nearest_nix+=1
-
-    return nearest_wix, nearest_eix, nearest_six, nearest_nix
-
+def framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north, dx_wrf, dy_wrf):
+    ## lower left corner
+    ll_distance = np.abs(lats_wrf-south) + np.abs(lons_wrf-west)
+    nearest_sidx, nearest_widx = np.unravel_index(ll_distance.argmin(),ll_distance.shape)
+    if lons_wrf[nearest_sidx, nearest_widx]>west:
+        nearest_widx-=1
+    if lats_wrf[nearest_sidx, nearest_widx]>south:
+        nearest_sidx-=1
+        
+    ## upper right corner
+    ur_distance = np.abs(lats_wrf-north) + np.abs(lons_wrf-east)
+    nearest_nidx, nearest_eidx = np.unravel_index(ur_distance.argmin(),ur_distance.shape)
+    if lons_wrf[nearest_nidx, nearest_eidx]<east:
+        nearest_eidx+=1
+    # to make sure the east boundary of PALM domain is within the cropped WRF domain
+    if lons_wrf[nearest_nidx, nearest_eidx]-east<dx_wrf:
+        nearest_eidx+=1
+    if lats_wrf[nearest_nidx, nearest_eidx]<north:
+        nearest_nidx+=1
+    # to make sure the north boundary of PALM domain is within the cropped WRF domain
+    if lats_wrf[nearest_nidx, nearest_eidx]-north<dy_wrf:
+        nearest_nidx+=1
+    return nearest_widx, nearest_eidx, nearest_sidx, nearest_nidx
 
 def nearest_2d(array, number):
     

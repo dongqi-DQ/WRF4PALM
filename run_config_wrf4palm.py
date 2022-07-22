@@ -240,7 +240,8 @@ generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
-west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north)
+west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north,dx_wrf, dy_wrf)
+
 # in case negative longitudes are used
 # these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:
