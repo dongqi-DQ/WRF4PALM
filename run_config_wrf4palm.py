@@ -76,7 +76,7 @@ z_origin = ast.literal_eval(config.get("domain", "z_origin"))[0]
 
 y = np.arange(dy/2,dy*ny+dy/2,dy)
 x = np.arange(dx/2,dx*nx+dx/2,dx)
-z = np.arange(dz/2, dz*nz, dz) + z_origin
+z = np.arange(dz/2, dz*nz, dz)
 xu = x + np.gradient(x)/2
 xu = xu[:-1]
 yv = y + np.gradient(y)/2
@@ -95,7 +95,10 @@ dz_stretch_level = ast.literal_eval(config.get("stretch", "dz_stretch_level"))[0
 dz_max = ast.literal_eval(config.get("stretch", "dz_max"))[0]
 
 if dz_stretch_factor>1.0:
-    z, zw = calc_stretch(z, dz, zw, dz_stretch_level,dz_stretch_factor, dz_stretch_level, dz_max)
+    z, zw = calc_stretch(z, dz, zw, dz_stretch_factor, dz_stretch_level, dz_max)
+
+z += z_origin
+zw += z_origin
 
 dz_soil = np.array(ast.literal_eval(config.get("soil", "dz_soil")))
 msoil_val = np.array(ast.literal_eval(config.get("soil", "msoil")))[0]
