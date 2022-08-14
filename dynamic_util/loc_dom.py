@@ -65,7 +65,7 @@ def generate_cfg(case_name, dx, dy, dz, nx, ny, nz, west, east, south, north, ce
 
 
 
-def calc_stretch(z, dz, zw, dz_stretch_level,dz_stretch_factor, dz_stretch_level, dz_max):
+def calc_stretch(z, dz, zw, dz_stretch_factor, dz_stretch_level, dz_max):
     '''
     vertically streched levels
     '''
