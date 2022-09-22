@@ -199,11 +199,13 @@ if map_proj not in wrf_map_dict:
     )
 
 wgs_proj = Proj(proj='latlong', datum='WGS84', ellips='sphere')
+dx_wrf, dy_wrf = ds_wrf.DX, ds_wrf.DY
 
 if map_proj == 6:
     wrf_proj = wgs_proj
     xx_wrf = ds_wrf.lon.data
     yy_wrf = ds_wrf.lat.data
+
 else:
     wrf_proj = Proj(proj=wrf_map_dict[map_proj], # projection type
                     lat_1=ds_wrf.TRUELAT1, lat_2=ds_wrf.TRUELAT2,
@@ -214,7 +216,6 @@ else:
     trans_wgs2wrf = Transformer.from_proj(wgs_proj, wrf_proj)
     e, n = trans_wgs2wrf.transform(ds_wrf.CEN_LON, ds_wrf.CEN_LAT)
     # WRF Grid parameters
-    dx_wrf, dy_wrf = ds_wrf.DX, ds_wrf.DY
     nx_wrf, ny_wrf = ds_wrf.dims['west_east'], ds_wrf.dims['south_north']
     # Down left corner of the domain
     x0_wrf = -(nx_wrf-1) / 2. * dx_wrf + e
