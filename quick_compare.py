@@ -19,10 +19,8 @@
 #--------------------------------------------------------------------------------
 
 import sys
-import time
 import salem
 import xarray as xr
-from functools import partial
 from pyproj import Proj, Transformer
 import configparser
 import ast
@@ -30,13 +28,8 @@ from glob import glob
 import numpy as np
 from math import ceil, floor
 from datetime import datetime, timedelta
-from tqdm import tqdm
-from functools import partial
-from multiprocess import Pool
 from dynamic_util.nearest import framing_2d_cartesian, nearest_1d
 from dynamic_util.loc_dom import calc_stretch, domain_location, generate_cfg
-from dynamic_util.process_wrf import zinterp, multi_zinterp, process_top
-from dynamic_util.geostrophic import calc_geostrophic_wind
 from dynamic_util.surface_nan_solver import *
 import warnings
 ## supress warnings
@@ -190,6 +183,7 @@ if map_proj not in wrf_map_dict:
 
 wgs_proj = Proj(proj='latlong', datum='WGS84', ellips='sphere')
 
+dx_wrf, dy_wrf = ds_wrf.DX, ds_wrf.DY
 if map_proj == 6:
     wrf_proj = wgs_proj
     xx_wrf = ds_wrf.lon.data
@@ -204,7 +198,6 @@ else:
     trans_wgs2wrf = Transformer.from_proj(wgs_proj, wrf_proj)
     e, n = trans_wgs2wrf.transform(ds_wrf.CEN_LON, ds_wrf.CEN_LAT)
     # WRF Grid parameters
-    dx_wrf, dy_wrf = ds_wrf.DX, ds_wrf.DY
     nx_wrf, ny_wrf = ds_wrf.dims['west_east'], ds_wrf.dims['south_north']
     # Down left corner of the domain
     x0_wrf = -(nx_wrf-1) / 2. * dx_wrf + e
@@ -232,7 +225,7 @@ generate_cfg(case_name, dx, dy, dz, nx, ny, nz,
              west, east, south, north, centlat, centlon,z_origin)
 
 # find indices of closest values
-west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north)
+west_idx,east_idx,south_idx,north_idx = framing_2d_cartesian(lons_wrf,lats_wrf, west,east,south,north,dx_wrf,dy_wrf)
 # in case negative longitudes are used
 # these two lines may be redundant need further tests 27 Oct 2021
 if east_idx-west_idx<0:
