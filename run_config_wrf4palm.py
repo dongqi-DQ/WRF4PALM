@@ -59,7 +59,7 @@ if not os.path.exists("./dynamic_files"):
 #--------------------------------------------------------------------------------
 settings_cfg = configparser.ConfigParser(inline_comment_prefixes='#')
 config = configparser.RawConfigParser()
-config.read(sys.argv[1])#"namelist.test")
+config.read(sys.argv[1])
 case_name =  ast.literal_eval(config.get("case", "case_name"))[0]
 max_pool  =  ast.literal_eval(config.get("case", "max_pool" ))[0]
 
@@ -330,6 +330,12 @@ tslb_wrf = ds_interp["TSLB"].sel(time=dt_start).load()
 smois_wrf = ds_interp["SMOIS"].sel(time=dt_start).load()
 deep_soil_wrf = ds_interp["TMN"].sel(time=dt_start)
 deep_tsoil = deep_soil_wrf.where(landmask).mean().load().data
+## in case the entire PALM domain is over water surface
+if np.isnan(median_smois[0]):
+    print("Warning: Entire PALM domain over water surface.")
+    median_smois = np.ones_like(median_smois)
+    deep_tsoil = deep_soil_wrf.mean().load().data
+            
 for izs in range(0,len(zs_wrf)):
     smois_wrf.isel(soil_layers=izs).data[watermask] = median_smois[izs]
     if smois_wrf.isel(soil_layers=izs).mean()== 0.0:
@@ -481,7 +487,7 @@ lat_geostr = ds_drop.lat[:,0]
 dx_wrf = ds_drop.DX
 dy_wrf = ds_drop.DY
 gph = ds_drop.gph
-print("Geostrophic wind estimation...gph.load()")
+print("Geostrophic wind loading data...")
 gph = gph.load()
 ds_geostr = xr.Dataset()
 ds_geostr = ds_geostr.assign_coords({"time":ds_drop.time.data,
