@@ -8,6 +8,10 @@
 2. [Instructions](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#instrustions)
 3. [Quick comparison script](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#quick-compare-wrf--palm)
 
+## What's new in v1.1.2?
+1. Users now have option to calculate geostropihc wind using z levels or pressure levels via `geostrophic` option in `[case]`.  
+2. The surface NaN solver now is taking surface variables from the correct altitude by including terrain height in WRF.
+
 ## What's new in v1.1?
 - multiple WRF output files are allowed
 - move from wrf-python to salem to modify RAM usage and computation time
