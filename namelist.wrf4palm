@@ -1,17 +1,18 @@
 [case]
-case_name = "wrf4palm_test",
+case_name = "wrf4palm_chch",
 max_pool = 4,
+geostrophic = "p", ## calculate geostrophic wind using pressure levels (option "p") or geopotential height levels (option "z")
 
 [domain]
 palm_proj = "EPSG:2193",    # projection of PALM
-centlat   = -35.7853,                           # latitude of domain centre
-centlon   = 174.1,                           # longitude of domain centre
-nx        = 200,                                  # number of grid points along x-axis
-ny        = 200,                                  # number of grid points along y-axis
-nz        = 120,                                  # number of grid points along z-axis
-dx        = 50.0,                                 # number of grid points along x-axis
-dy        = 50.0,                                 # number of grid points along y-axis
-dz        = 10.0,                                 # number of grid points along z-axis
+centlat   = -43.59000799999999,                           # latitude of domain centre
+centlon   = 172.713367,                           # longitude of domain centre
+nx        = 108,                                  # number of grid points along x-axis
+ny        = 108,                                  # number of grid points along y-axis
+nz        = 50,                                  # number of grid points along z-axis
+dx        = 729.0,                                 # number of grid points along x-axis
+dy        = 729.0,                                 # number of grid points along y-axis
+dz        = 162.0,                                 # number of grid points along z-axis
 z_origin  = 0.0,                                  # elevated mean grid position (elevated terrain)
 
 [stretch]
@@ -24,19 +25,19 @@ dz_max = 30.0,                  # allowed maximum vertical grid spacing (in m)
 
 [wrf]
 wrf_path = "./wrf_output/",
-wrf_output = "wrfout_d04_2020-12-25_12-00-00", "wrfout_d04_2020-12-26_12-00-00",
+wrf_output = "wrfout_d03_2001-08-29_chch", 
 
 interp_mode = "linear",
 
-start_year = 2020,
-start_month = 12,
-start_day = 25,
-start_hour = 13,
+start_year = 2001,
+start_month = 8,
+start_day = 29,
+start_hour = 1,
 
-end_year = 2020,
-end_month = 12,
-end_day = 26,
-end_hour = 10,
+end_year = 2001,
+end_month = 8,
+end_day = 29,
+end_hour = 3,
 
 dynamic_ts = 3600.0,         # PALM dynamic driver update frequency
 

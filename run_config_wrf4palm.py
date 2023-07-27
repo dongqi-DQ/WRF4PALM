@@ -15,7 +15,7 @@
 # [Update v1.0.1] - 7 Jan 2021
 # User input should be provided in namelist.dynamic
 #
-# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+# @author: Dongqi Lin (dongqi.lin@canterbury.ac.nz)
 # Acknowledgement: The author would like to acknowledge Ricardo Faria for his
 # initial contribution of WRF2PALM https://github.com/ricardo88faria/WRF2PALM.
 #--------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ from multiprocess import Pool
 from dynamic_util.nearest import framing_2d_cartesian
 from dynamic_util.loc_dom import calc_stretch, domain_location, generate_cfg
 from dynamic_util.process_wrf import zinterp, multi_zinterp
-from dynamic_util.geostrophic import calc_geostrophic_wind
+from dynamic_util.geostrophic import *
 from dynamic_util.surface_nan_solver import *
 import warnings
 ## supress warnings
@@ -62,6 +62,7 @@ config = configparser.RawConfigParser()
 config.read(sys.argv[1])
 case_name =  ast.literal_eval(config.get("case", "case_name"))[0]
 max_pool  =  ast.literal_eval(config.get("case", "max_pool" ))[0]
+geostr_lvl =  ast.literal_eval(config.get("case", "geostrophic" ))[0] 
 
 palm_proj_code = ast.literal_eval(config.get("domain", "palm_proj"))[0]
 centlat = ast.literal_eval(config.get("domain", "centlat"))[0]
@@ -487,29 +488,53 @@ for ts in tqdm(range(0,len(all_ts)), total=len(all_ts), position=0, leave=True):
 # Geostrophic wind estimation
 #-------------------------------------------------------------------------------
 print("Geostrophic wind estimation...")
-lat_geostr = ds_drop.lat[:,0]
-dx_wrf = ds_drop.DX
-dy_wrf = ds_drop.DY
-gph = ds_drop.gph
-print("Geostrophic wind loading data...")
-gph = gph.load()
-ds_geostr = xr.Dataset()
-ds_geostr = ds_geostr.assign_coords({"time":ds_drop.time.data,
-                                     "z": ds_drop["Z"].mean(("time", "south_north", "west_east")).data})
-ds_geostr["ug"] = xr.DataArray(np.zeros((len(all_ts),len(gph.bottom_top.data))),
-                               dims=['time','z'])
-ds_geostr["vg"] = xr.DataArray(np.zeros((len(all_ts),len(gph.bottom_top.data))),
-                               dims=['time','z'])
+## Check which levels should be used for geostrophic winds calculation
+if geostr_lvl == "z":
+    lat_geostr = ds_drop.lat[:,0]
+    dx_wrf = ds_drop.DX
+    dy_wrf = ds_drop.DY
+    gph = ds_drop.gph
+    print("Geostrophic wind loading data...")
+    gph = gph.load()
+    ds_geostr_z = xr.Dataset()
+    ds_geostr_z = ds_geostr_z.assign_coords({"time":ds_drop.time.data,
+                                         "z": ds_drop["Z"].mean(("time", "south_north", "west_east")).data})
+    ds_geostr_z["ug"] = xr.DataArray(np.zeros((len(all_ts),len(gph.bottom_top.data))),
+                                   dims=['time','z'])
+    ds_geostr_z["vg"] = xr.DataArray(np.zeros((len(all_ts),len(gph.bottom_top.data))),
+                                   dims=['time','z'])
 
-for ts in tqdm(range(0,len(all_ts)), total=len(all_ts), position=0, leave=True):
-    for levels in gph.bottom_top.data:
-        ds_geostr["ug"][ts,levels], ds_geostr["vg"][ts,levels] = calc_geostrophic_wind(
-        gph[ts,levels, :,:].data, lat_geostr.data, dy_wrf, dx_wrf)
+    for ts in tqdm(range(0,len(all_ts)), total=len(all_ts), position=0, leave=True):
+        for levels in gph.bottom_top.data:
+            ds_geostr_z["ug"][ts,levels], ds_geostr_z["vg"][ts,levels] = calc_geostrophic_wind_zlevels(
+            gph[ts,levels, :,:].data, lat_geostr.data, dy_wrf, dx_wrf)
 
 
-# interpolate to PALM vertical levels
-ds_geostr = ds_geostr.interp({"z": z})
+    # interpolate to PALM vertical levels
+    ds_geostr = ds_geostr_z.interp({"z": z})
 
+if geostr_lvl == "p":
+    pres = ds_drop.PRESSURE.load()
+    tk = ds_drop.TK.load()
+
+    lat_1d = ds_drop.lat[:,0]
+    lon_1d = ds_drop.lon[0,:]
+
+    ds_geostr_p = xr.Dataset()
+    ds_geostr_p = ds_geostr_p.assign_coords({"time":ds_drop.time.data,
+                                         "z": ds_drop["Z"].mean(("time", "south_north", "west_east")).data})
+    ds_geostr_p["ug"] = xr.DataArray(np.zeros((len(all_ts),len(pres.bottom_top.data))),
+                                   dims=['time','z'])
+    ds_geostr_p["vg"] = xr.DataArray(np.zeros((len(all_ts),len(pres.bottom_top.data))),
+                                   dims=['time','z'])
+
+    for ts in tqdm(range(0,len(all_ts)), total=len(all_ts), position=0, leave=True):
+        for levels in pres.bottom_top.data:
+            ds_geostr_p["ug"][ts,levels], ds_geostr_p["vg"][ts,levels] = calc_geostrophic_wind_plevels(
+            pres[ts,levels, :,:].data, tk[ts,levels, :,:].data, lat_1d, lon_1d, dy_wrf, dx_wrf)
+
+    # interpolate to PALM vertical levels
+    ds_geostr = ds_geostr_p.interp({"z": z})
 
 #-------------------------------------------------------------------------------
 # surface NaNs

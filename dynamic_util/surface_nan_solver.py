@@ -5,7 +5,7 @@
 #
 # functions to resolve NaN values near surface
 #
-# @author: Dongqi Lin (dongqi.lin@pg.canterbury.ac.nz)
+# @author: Dongqi Lin (dongqi.lin@canterbury.ac.nz)
 #--------------------------------------------------------------------------------#
 import numpy as np
 
@@ -16,8 +16,9 @@ def surface_nan_uv(data,z, uv10):
     nan_idx = np.argwhere(np.isnan(data))
     if nan_idx.size > 0 :
         nan_idx = int(nan_idx[-1])+1
-        a = (data[nan_idx]-uv10)/np.log(z[nan_idx]-10)
-        b = uv10-a*np.log(10)
+        terrain_height = z[nan_idx]
+        a = (data[nan_idx]-uv10)/np.log(terrain_height/(terrain_height+10))
+        b = uv10-a*np.log(10+terrain_height)
         for i in range(0,int(nan_idx)):
             data[i] = a*np.log(z[i])+b
     return(data)
@@ -29,8 +30,9 @@ def surface_nan_s(data,z,s2):
     nan_idx = np.argwhere(np.isnan(data))
     if nan_idx.size > 0 :
         nan_idx = int(nan_idx[-1] + 1)
-        a = (data[nan_idx]- s2)/(z[nan_idx]-2)
-        b = s2-a*2
+        terrain_height = z[nan_idx]
+        a = (s2-data[nan_idx])/(2)
+        b = s2-a*(2+terrain_height)
         for i in range(0,int(nan_idx)):
             data[i] = a*z[i]+b
     return(data)
