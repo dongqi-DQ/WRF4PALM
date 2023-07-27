@@ -3,6 +3,8 @@
 
 *If you wish to use WRF4PALM v1.0, please go to [WRF4PALM v1.0](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.0)*
 
+**Want to create your own static driver? Check out [GEO4PALM](https://github.com/dongqi-DQ/GEO4PALM)!**
+
 ## Contents
 1. [What's new?](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#whats-new-in-v11)
 2. [Instructions](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#instrustions)
