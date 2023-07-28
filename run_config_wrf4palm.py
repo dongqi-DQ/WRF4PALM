@@ -345,13 +345,18 @@ for izs in range(0,len(zs_wrf)):
     smois_wrf.isel(soil_layers=izs).data[watermask] = median_smois[izs]
     if smois_wrf.isel(soil_layers=izs).mean()== 0.0:
         smois_wrf.isel(soil_layers=izs).data[:,:] = msoil_val
-
+# convert soil thickness to depth
+zs_palm = np.zeros_like(dz_soil)
+zs_palm[0] = dz_soil[0]
+for i in range(1,len(dz_soil)):
+    zs_palm[i] = np.sum(dz_soil[:i+1])
+        
 init_tsoil = np.zeros((len(dz_soil), len(y), len(x)))
 init_msoil = np.zeros((len(dz_soil), len(y), len(x)))
 for iy in tqdm(range(0,len(y)),position=0, leave=True):
     for ix in range(0, len(x)):
-        init_tsoil[:,iy,ix] = np.interp(dz_soil, zs_wrf.data, tslb_wrf[:,iy,ix])
-        init_msoil[:,iy,ix] = np.interp(dz_soil, zs_wrf.data, smois_wrf[:,iy,ix])
+        init_tsoil[:,iy,ix] = np.interp(zs_palm, zs_wrf.data, tslb_wrf[:,iy,ix])
+        init_msoil[:,iy,ix] = np.interp(zs_palm, zs_wrf.data, smois_wrf[:,iy,ix])
 
 #-------------------------------------------------------------------------------
 # Vertical interpolation
