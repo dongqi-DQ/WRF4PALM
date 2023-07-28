@@ -11,7 +11,7 @@
 3. [Quick comparison script](https://github.com/dongqi-DQ/WRF4PALM/tree/v1.1/#quick-compare-wrf--palm)
 
 ## What's new in v1.1.2?
-1. Users now have option to calculate geostropihc wind using geopotential height (option `"z"`) or pressure ("p") via `geostrophic` option in `[case]`.  
+1. Users now have option to calculate geostropihc wind using geopotential height (option `"z"`) or pressure (option `"p"`) via `geostrophic` option in `[case]`.  
 2. The surface NaN solver now is taking surface variables from the correct altitude by including terrain height in WRF.
 
 ## What's new in v1.1?
