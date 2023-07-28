@@ -1,7 +1,7 @@
 [case]
 case_name = "wrf4palm_chch",
 max_pool = 4,
-geostrophic = "p", ## calculate geostrophic wind using pressure levels (option "p") or geopotential height levels (option "z")
+geostrophic = "p", ## calculate geostrophic wind using the variable pressure (option "p") or geopotential height  (option "z")
 
 [domain]
 palm_proj = "EPSG:2193",    # projection of PALM

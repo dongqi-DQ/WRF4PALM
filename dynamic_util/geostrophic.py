@@ -104,8 +104,8 @@ def calc_geostrophic_wind_plevels(array_2d_press, array_2d_temp, array_1d_lat, a
     rho_tmp = np.nanmean(rho(array_2d_temp, array_2d_press))
        
     
-    gradx = np.zeros((len(array_1d_lat),len(array_1d_lon)))
-    grady = np.zeros((len(array_1d_lat),len(array_1d_lon)))
+    gradx = np.zeros_like(array_2d_press)
+    grady = np.zeros_like(array_2d_press)
     
     for i in range(0,len(array_1d_lon)-1):
         gradx[:,i] = array_2d_press[:,i+1]-array_2d_press[:,i] 
