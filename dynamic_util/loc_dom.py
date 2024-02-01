@@ -34,8 +34,8 @@ def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
             ),
         )
         utm_crs = CRS.from_epsg(utm_crs_list[0].code)
-        trans_utm2wgs = Transformer.from_proj( utm_crs, wgs_proj)
-        trans_wgs2utm = Transformer.from_proj( wgs_proj, utm_crs)
+        trans_utm2wgs = Transformer.from_proj( utm_crs, wgs_proj, always_xy=True)
+        trans_wgs2utm = Transformer.from_proj( wgs_proj, utm_crs, always_xy=True)
 
         centx, centy =  trans_wgs2utm.transform(centlon, centlat)
         west_utm, east_utm   = centx-nx*dx/2, centx+nx*dx/2
@@ -48,7 +48,7 @@ def domain_location(palm_proj, wgs_proj, centlat, centlon, dx, dy, nx, ny):
 
         inProj =  wgs_proj
         outProj = palm_proj
-        transformer = Transformer.from_proj(inProj, outProj)
+        transformer = Transformer.from_proj(inProj, outProj, always_xy=True)
         centx, centy = transformer.transform(centlon,centlat)
 
         west, east   = centx-nx*dx/2, centx+nx*dx/2
