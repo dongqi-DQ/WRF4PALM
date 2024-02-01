@@ -89,7 +89,7 @@ dz_stretch_level = ast.literal_eval(config.get("stretch", "dz_stretch_level"))[0
 dz_max = ast.literal_eval(config.get("stretch", "dz_max"))[0]
 
 if dz_stretch_factor>1.0:
-    z, zw = calc_stretch(z, dz, zw, dz_stretch_level)
+    z, zw = calc_stretch(z, dz, zw, dz_stretch_factor, dz_stretch_level, dz_max)
 
 dz_soil = np.array(ast.literal_eval(config.get("soil", "dz_soil")))
 
